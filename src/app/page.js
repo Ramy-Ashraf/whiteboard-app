@@ -381,6 +381,18 @@ export default function Whiteboard() {
     setActiveBoardId(newBoard.id);
   };
 
+  // Helper: delete a board by its id
+  const deleteBoard = (boardId) => {
+    setBoards((prevBoards) => {
+      const updatedBoards = prevBoards.filter((board) => board.id !== boardId);
+      // If the deleted board was active, update active board to the first available board (if any)
+      if (boardId === activeBoardId) {
+        setActiveBoardId(updatedBoards.length > 0 ? updatedBoards[0].id : null);
+      }
+      return updatedBoards;
+    });
+  };
+
   // When textBox becomes active, focus on the textarea.
   useEffect(() => {
     if (textBox?.active && textInputRef.current) {
@@ -591,6 +603,12 @@ export default function Whiteboard() {
             ))}
             <option value="add">+ Add Board</option>
           </select>
+          <button
+            onClick={() => deleteBoard(activeBoardId)}
+            className="px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none bg-red-600 text-white"
+          >
+            Delete Board
+          </button>
           <button
             onClick={() => setDarkMode((prev) => !prev)}
             className="px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none bg-gray-200 text-white"
