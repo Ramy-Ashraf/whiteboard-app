@@ -392,7 +392,7 @@ export default function Whiteboard() {
     <div
       className={`${
         darkMode ? "bg-gray-900 text-white" : "bg-gray-100 text-black"
-      } min-h-screen p-5`}
+      } flex flex-col min-h-screen p-2`}
     >
       <div className="mb-2 flex items-center justify-between">
         <div className="flex flex-wrap items-center gap-2">
@@ -494,7 +494,7 @@ export default function Whiteboard() {
                         min="1"
                         value={penWidth}
                         onChange={(e) => setPenWidth(Number(e.target.value))}
-                        className="w-16 border rounded px-1 py-0.5"
+                        className="w-16 border rounded px-1 py-0.5 text-black"
                       />
                     </div>
                   )}
@@ -519,7 +519,7 @@ export default function Whiteboard() {
                         onChange={(e) =>
                           setHighlightWidth(Number(e.target.value))
                         }
-                        className="w-16 border rounded px-1 py-0.5"
+                        className="w-16 border rounded px-1 py-0.5 text-black"
                       />
                     </div>
                   )}
@@ -600,238 +600,237 @@ export default function Whiteboard() {
         </div>
       </div>
 
-      <div className="overflow-auto" style={{ width: "100%", height: "90vh" }}>
-        <div style={{ width: "100%", height: "90vh" }}>
-          {activeBoard.pdfUrl && (
-            <iframe
-              src={activeBoard.pdfUrl}
-              className="w-full h-[90vh] border-0"
-              title="PDF Viewer"
+      {/* Responsive whiteboard container */}
+      <div className="flex-grow relative overflow-hidden">
+        {activeBoard.pdfUrl && (
+          <iframe
+            src={activeBoard.pdfUrl}
+            className="absolute inset-0 w-full h-full border-0"
+            title="PDF Viewer"
+          />
+        )}
+        <svg
+          ref={svgRef}
+          className={`absolute inset-0 w-full h-full border ${
+            darkMode
+              ? "border-gray-600 bg-gray-800"
+              : "border-gray-300 bg-white"
+          } touch-none z-10`}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+        >
+          {activeBoard.elements.map((element) => (
+            <g key={element.id}>
+              {element.type === "pen" || element.type === "highlight" ? (
+                <>
+                  <path
+                    d={`M ${element.points
+                      .map((p) => p.join(" "))
+                      .join(" L ")}`}
+                    stroke={element.color}
+                    fill="none"
+                    strokeWidth={element.strokeWidth}
+                    opacity={element.type === "highlight" ? 0.5 : 1}
+                    pointerEvents="visibleStroke"
+                  />
+                  {selectedElements.has(element.id) && (
+                    <>
+                      <rect
+                        x={Math.min(...element.points.map((p) => p[0])) - 5}
+                        y={Math.min(...element.points.map((p) => p[1])) - 5}
+                        width={
+                          Math.max(...element.points.map((p) => p[0])) -
+                          Math.min(...element.points.map((p) => p[0])) +
+                          10
+                        }
+                        height={
+                          Math.max(...element.points.map((p) => p[1])) -
+                          Math.min(...element.points.map((p) => p[1])) +
+                          10
+                        }
+                        fill="none"
+                        stroke="#0070f3"
+                        strokeWidth="1"
+                        strokeDasharray="4 2"
+                      />
+                      <circle
+                        cx={Math.max(...element.points.map((p) => p[0])) + 10}
+                        cy={Math.min(...element.points.map((p) => p[1])) - 10}
+                        r="5"
+                        fill="#0070f3"
+                        cursor="move"
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                          setIsMoveIconDragging(true);
+                          dragStartPos.current = getSVGPoint(
+                            e.clientX,
+                            e.clientY
+                          );
+                          elementStartPositions.current = new Map(
+                            Array.from(selectedElements).map((id) => {
+                              const el = activeBoard.elements.find(
+                                (e) => e.id === id
+                              );
+                              return [
+                                id,
+                                {
+                                  x: el.x || el.points[0][0],
+                                  y: el.y || el.points[0][1],
+                                  points: el.points?.map((p) => [...p]),
+                                },
+                              ];
+                            })
+                          );
+                        }}
+                      />
+                    </>
+                  )}
+                </>
+              ) : (
+                <>
+                  <text
+                    x={element.x}
+                    y={element.y + element.fontSize}
+                    fill={element.color}
+                    fontSize={element.fontSize}
+                    className="pointer-events-auto"
+                  >
+                    {element.content}
+                  </text>
+                  {selectedElements.has(element.id) && (
+                    <>
+                      <rect
+                        x={element.x - 5}
+                        y={element.y - 5}
+                        width={(element.width || 100) + 10}
+                        height={element.fontSize + 10}
+                        fill="none"
+                        stroke="#0070f3"
+                        strokeWidth="1"
+                        strokeDasharray="4 2"
+                      />
+                      <circle
+                        cx={element.x + (element.width || 100) + 10}
+                        cy={element.y - 10}
+                        r="5"
+                        fill="#0070f3"
+                        cursor="move"
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                          setIsMoveIconDragging(true);
+                          dragStartPos.current = getSVGPoint(
+                            e.clientX,
+                            e.clientY
+                          );
+                          elementStartPositions.current = new Map(
+                            Array.from(selectedElements).map((id) => {
+                              const el = activeBoard.elements.find(
+                                (e) => e.id === id
+                              );
+                              return [
+                                id,
+                                {
+                                  x: el.x || el.points[0][0],
+                                  y: el.y || el.points[0][1],
+                                  points: el.points?.map((p) => [...p]),
+                                },
+                              ];
+                            })
+                          );
+                        }}
+                      />
+                    </>
+                  )}
+                </>
+              )}
+            </g>
+          ))}
+
+          {currentPath && (
+            <path
+              d={`M ${currentPath.points
+                .map((p) => p.join(" "))
+                .join(" L ")}`}
+              stroke={currentPath.color}
+              fill="none"
+              strokeWidth={currentPath.strokeWidth}
+              opacity={currentPath.type === "highlight" ? 0.5 : 1}
             />
           )}
-          <svg
-            ref={svgRef}
-            className={`w-full h-[90vh] border ${
-              darkMode
-                ? "border-gray-600 bg-gray-800"
-                : "border-gray-300 bg-white"
-            } touch-none relative z-10`}
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
-          >
-            {activeBoard.elements.map((element) => (
-              <g key={element.id}>
-                {element.type === "pen" || element.type === "highlight" ? (
-                  <>
-                    <path
-                      d={`M ${element.points
-                        .map((p) => p.join(" "))
-                        .join(" L ")}`}
-                      stroke={element.color}
-                      fill="none"
-                      strokeWidth={element.strokeWidth}
-                      opacity={element.type === "highlight" ? 0.5 : 1}
-                      pointerEvents="visibleStroke"
-                    />
-                    {selectedElements.has(element.id) && (
-                      <>
-                        <rect
-                          x={Math.min(...element.points.map((p) => p[0])) - 5}
-                          y={Math.min(...element.points.map((p) => p[1])) - 5}
-                          width={
-                            Math.max(...element.points.map((p) => p[0])) -
-                            Math.min(...element.points.map((p) => p[0])) +
-                            10
-                          }
-                          height={
-                            Math.max(...element.points.map((p) => p[1])) -
-                            Math.min(...element.points.map((p) => p[1])) +
-                            10
-                          }
-                          fill="none"
-                          stroke="#0070f3"
-                          strokeWidth="1"
-                          strokeDasharray="4 2"
-                        />
-                        <circle
-                          cx={Math.max(...element.points.map((p) => p[0])) + 10}
-                          cy={Math.min(...element.points.map((p) => p[1])) - 10}
-                          r="5"
-                          fill="#0070f3"
-                          cursor="move"
-                          onMouseDown={(e) => {
-                            e.stopPropagation();
-                            setIsMoveIconDragging(true);
-                            dragStartPos.current = getSVGPoint(
-                              e.clientX,
-                              e.clientY
-                            );
-                            elementStartPositions.current = new Map(
-                              Array.from(selectedElements).map((id) => {
-                                const el = activeBoard.elements.find(
-                                  (e) => e.id === id
-                                );
-                                return [
-                                  id,
-                                  {
-                                    x: el.x || el.points[0][0],
-                                    y: el.y || el.points[0][1],
-                                    points: el.points?.map((p) => [...p]),
-                                  },
-                                ];
-                              })
-                            );
-                          }}
-                        />
-                      </>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <text
-                      x={element.x}
-                      y={element.y + element.fontSize}
-                      fill={element.color}
-                      fontSize={element.fontSize}
-                      className="pointer-events-auto"
-                    >
-                      {element.content}
-                    </text>
-                    {selectedElements.has(element.id) && (
-                      <>
-                        <rect
-                          x={element.x - 5}
-                          y={element.y - 5}
-                          width={(element.width || 100) + 10}
-                          height={element.fontSize + 10}
-                          fill="none"
-                          stroke="#0070f3"
-                          strokeWidth="1"
-                          strokeDasharray="4 2"
-                        />
-                        <circle
-                          cx={element.x + (element.width || 100) + 10}
-                          cy={element.y - 10}
-                          r="5"
-                          fill="#0070f3"
-                          cursor="move"
-                          onMouseDown={(e) => {
-                            e.stopPropagation();
-                            setIsMoveIconDragging(true);
-                            dragStartPos.current = getSVGPoint(
-                              e.clientX,
-                              e.clientY
-                            );
-                            elementStartPositions.current = new Map(
-                              Array.from(selectedElements).map((id) => {
-                                const el = activeBoard.elements.find(
-                                  (e) => e.id === id
-                                );
-                                return [
-                                  id,
-                                  {
-                                    x: el.x || el.points[0][0],
-                                    y: el.y || el.points[0][1],
-                                    points: el.points?.map((p) => [...p]),
-                                  },
-                                ];
-                              })
-                            );
-                          }}
-                        />
-                      </>
-                    )}
-                  </>
-                )}
-              </g>
-            ))}
 
-            {currentPath && (
-              <path
-                d={`M ${currentPath.points
-                  .map((p) => p.join(" "))
-                  .join(" L ")}`}
-                stroke={currentPath.color}
-                fill="none"
-                strokeWidth={currentPath.strokeWidth}
-                opacity={currentPath.type === "highlight" ? 0.5 : 1}
-              />
-            )}
+          {selectionRect && (
+            <rect
+              x={selectionRect.x1}
+              y={selectionRect.y1}
+              width={selectionRect.x2 - selectionRect.x1}
+              height={selectionRect.y2 - selectionRect.y1}
+              fill="rgba(0, 112, 243, 0.1)"
+              stroke="#0070f3"
+              strokeWidth="1"
+              strokeDasharray="4 2"
+              pointerEvents="none"
+            />
+          )}
 
-            {selectionRect && (
-              <rect
-                x={selectionRect.x1}
-                y={selectionRect.y1}
-                width={selectionRect.x2 - selectionRect.x1}
-                height={selectionRect.y2 - selectionRect.y1}
-                fill="rgba(0, 112, 243, 0.1)"
-                stroke="#0070f3"
-                strokeWidth="1"
-                strokeDasharray="4 2"
-                pointerEvents="none"
-              />
-            )}
-
-            {textBox && (
-              <foreignObject
-                x={textBox.x}
-                y={textBox.y}
-                width={textBox.width}
-                height={textBox.height}
+          {textBox && (
+            <foreignObject
+              x={textBox.x}
+              y={textBox.y}
+              width={textBox.width}
+              height={textBox.height}
+              style={{
+                overflow: "visible",
+                filter: "drop-shadow(0px 2px 4px rgba(0,0,0,0.2))",
+              }}
+            >
+              <div
                 style={{
-                  overflow: "visible",
-                  filter: "drop-shadow(0px 2px 4px rgba(0,0,0,0.2))",
+                  position: "relative",
+                  width: "100%",
+                  height: "100%",
                 }}
               >
-                <div
-                  style={{
-                    position: "relative",
-                    width: "100%",
-                    height: "100%",
+                <textarea
+                  ref={textInputRef}
+                  value={textBox.content}
+                  onChange={handleTextChange}
+                  onBlur={() => {
+                    if (!isResizingTextBox) finalizeText();
                   }}
-                >
-                  <textarea
-                    ref={textInputRef}
-                    value={textBox.content}
-                    onChange={handleTextChange}
-                    onBlur={() => {
-                      if (!isResizingTextBox) finalizeText();
-                    }}
-                    onMouseDown={(e) => e.stopPropagation()}
-                    style={{ fontSize: textBox.fontSize, resize: "none" }}
-                    className={`w-full h-full border-2 rounded p-2 text-lg outline-none font-sans ${
-                      darkMode
-                        ? "bg-gray-700 text-white border-gray-500"
-                        : "bg-white text-black border-blue-600"
-                    }`}
-                    onKeyDown={(e) => e.key === "Enter" && e.target.blur()}
-                  />
-                  <div
-                    onMouseDown={(e) => {
-                      e.stopPropagation();
-                      setIsResizingTextBox(true);
-                      resizeStartPos.current = getSVGPoint(
-                        e.clientX,
-                        e.clientY
-                      );
-                    }}
-                    style={{
-                      position: "absolute",
-                      bottom: 0,
-                      right: 0,
-                      width: 15,
-                      height: 15,
-                      cursor: "nwse-resize",
-                      backgroundColor: "#0070f3",
-                    }}
-                  />
-                </div>
-              </foreignObject>
-            )}
-          </svg>
-        </div>
+                  onMouseDown={(e) => e.stopPropagation()}
+                  style={{ fontSize: textBox.fontSize, resize: "none" }}
+                  className={`w-full h-full border-2 rounded p-2 text-lg outline-none font-sans ${
+                    darkMode
+                      ? "bg-gray-700 text-white border-gray-500"
+                      : "bg-white text-black border-blue-600"
+                  }`}
+                  onKeyDown={(e) => e.key === "Enter" && e.target.blur()}
+                />
+                <div
+                  onMouseDown={(e) => {
+                    e.stopPropagation();
+                    setIsResizingTextBox(true);
+                    resizeStartPos.current = getSVGPoint(
+                      e.clientX,
+                      e.clientY
+                    );
+                  }}
+                  style={{
+                    position: "absolute",
+                    bottom: 0,
+                    right: 0,
+                    width: 15,
+                    height: 15,
+                    cursor: "nwse-resize",
+                    backgroundColor: "#0070f3",
+                  }}
+                />
+              </div>
+            </foreignObject>
+          )}
+        </svg>
       </div>
       <div className="text-center text-xs mt-1">
         Made with ❤️ by{" "}
