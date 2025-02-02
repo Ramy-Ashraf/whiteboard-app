@@ -605,17 +605,19 @@ export default function Whiteboard() {
         {activeBoard.pdfUrl && (
           <iframe
             src={activeBoard.pdfUrl}
-            className="absolute inset-0 w-full h-full border-0"
+            className="absolute inset-0 w-full h-full border-0 z-20"
             title="PDF Viewer"
           />
         )}
         <svg
           ref={svgRef}
           className={`absolute inset-0 w-full h-full border ${
-            darkMode
+            activeBoard.pdfUrl
+              ? "pointer-events-none"
+              : darkMode
               ? "border-gray-600 bg-gray-800"
               : "border-gray-300 bg-white"
-          } touch-none z-10`}
+          } z-10`}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
