@@ -29,7 +29,7 @@ export default function Whiteboard() {
   };
 
   // All other states remain unchanged.
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(true);
   const [mode, setMode] = useState("write");
   const [tool, setTool] = useState("pen");
   const [penColor, setPenColor] = useState("#000000");
@@ -384,12 +384,21 @@ export default function Whiteboard() {
   // Helper: delete a board by its id
   const deleteBoard = (boardId) => {
     setBoards((prevBoards) => {
+      // Prevent deletion if there's only one board
+      if (prevBoards.length === 1) return prevBoards;
+
       const updatedBoards = prevBoards.filter((board) => board.id !== boardId);
-      // If the deleted board was active, update active board to the first available board (if any)
+      // Renumber boards names sequentially
+      const renumberedBoards = updatedBoards.map((board, index) => ({
+        ...board,
+        name: `Board ${index + 1}`,
+      }));
+
+      // If the deleted board was active, update active board to the first available board
       if (boardId === activeBoardId) {
-        setActiveBoardId(updatedBoards.length > 0 ? updatedBoards[0].id : null);
+        setActiveBoardId(renumberedBoards[0]?.id || null);
       }
-      return updatedBoards;
+      return renumberedBoards;
     });
   };
 
