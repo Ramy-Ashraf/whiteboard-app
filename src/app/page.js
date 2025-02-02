@@ -20,7 +20,9 @@ export default function Whiteboard() {
   const [selectionRect, setSelectionRect] = useState(null);
   const [isMoveIconDragging, setIsMoveIconDragging] = useState(false);
   const [isResizingTextBox, setIsResizingTextBox] = useState(false);
-  
+  // new state for text font size
+  const [textFontSize, setTextFontSize] = useState(20);
+
   const svgRef = useRef(null);
   const textInputRef = useRef(null);
   const dragStartPos = useRef({ x: 0, y: 0 });
@@ -43,7 +45,7 @@ export default function Whiteboard() {
         const chosenColor = tool === 'pen' ? penColor : highlightColor;
         const chosenWidth = tool === 'pen' ? penWidth : highlightWidth;
         setCurrentPath({
-          type: tool, // "pen" or "highlight"
+          type: tool,
           points: [[svgPoint.x, svgPoint.y]],
           color: chosenColor,
           strokeWidth: chosenWidth,
@@ -52,14 +54,16 @@ export default function Whiteboard() {
         setDrawing(true);
       } else if (tool === 'text') {
         dragStartPos.current = svgPoint;
+        // update textBox to use the current textFontSize; set height relative to font size.
         setTextBox({
           x: svgPoint.x,
           y: svgPoint.y,
           width: 100,
-          height: 40,
+          height: textFontSize * 2,
           content: '',
           id: Date.now(),
-          active: false
+          active: false,
+          fontSize: textFontSize
         });
         setIsDragging(true);
       }
@@ -175,7 +179,6 @@ export default function Whiteboard() {
 
         setElements(elements.map(el => {
           if (!selectedElements.has(el.id)) return el;
-          
           const startPos = elementStartPositions.current.get(el.id);
           if (!startPos) return el;
 
@@ -186,7 +189,6 @@ export default function Whiteboard() {
               y: startPos.y + deltaY
             };
           }
-          
           return {
             ...el,
             points: startPos.points.map(([px, py]) => [
@@ -256,7 +258,8 @@ export default function Whiteboard() {
     if (textBox && textBox.content.trim()) {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
-      ctx.font = "20px sans-serif";
+      // use the textBox fontSize for measurement
+      ctx.font = `${textBox.fontSize}px sans-serif`;
       const measuredWidth = ctx.measureText(textBox.content.trim()).width;
       
       setElements(prev => [
@@ -268,7 +271,8 @@ export default function Whiteboard() {
           width: measuredWidth,
           content: textBox.content,
           id: textBox.id,
-          color: textColor
+          color: textColor,
+          fontSize: textBox.fontSize
         }
       ]);
     }
@@ -280,7 +284,8 @@ export default function Whiteboard() {
     
     if (element.type === 'text') {
       const textWidth = element.width || 100;
-      const textHeight = 40;
+      // assume height based on fontSize (rough approximation)
+      const textHeight = element.fontSize || 20;
       return (
         element.x < rect.x2 &&
         element.x + textWidth > rect.x1 &&
@@ -312,8 +317,8 @@ export default function Whiteboard() {
 
   return (
     <div className={`${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-black'} min-h-screen p-5`}>
-      <div className="mb-5 flex items-center justify-between flex-wrap">
-        <div className="flex items-center flex-wrap space-x-3">
+      <div className="mb-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-3">
           <button 
             onClick={switchToWriteMode} 
             className={`px-4 py-2 rounded shadow transition transform hover:scale-105 focus:outline-none ${
@@ -367,16 +372,17 @@ export default function Whiteboard() {
               >
                 🔤 Text
               </button>
+              
               {tool === 'pen' && (
-                <div className="flex items-center space-x-2">
-                  <label>Pen Color:</label>
+                <div className="flex items-center gap-2">
+                  <label className="whitespace-nowrap">Pen Color:</label>
                   <input 
                     type="color" 
                     value={penColor} 
                     onChange={(e) => setPenColor(e.target.value)} 
-                    className="w-8 h-8 p-0 border-none bg-transparent"
+                    className="w-8 h-8 border-none bg-transparent"
                   />
-                  <label>Pen Width:</label>
+                  <label className="whitespace-nowrap">Pen Width:</label>
                   <input 
                     type="range" 
                     min="1" 
@@ -388,15 +394,15 @@ export default function Whiteboard() {
                 </div>
               )}
               {tool === 'highlight' && (
-                <div className="flex items-center space-x-2">
-                  <label>Highlight Color:</label>
+                <div className="flex items-center gap-2">
+                  <label className="whitespace-nowrap">Highlight Color:</label>
                   <input 
                     type="color" 
                     value={highlightColor} 
                     onChange={(e) => setHighlightColor(e.target.value)} 
-                    className="w-8 h-8 p-0 border-none bg-transparent"
+                    className="w-8 h-8 border-none bg-transparent"
                   />
-                  <label>Highlight Width:</label>
+                  <label className="whitespace-nowrap">Highlight Width:</label>
                   <input 
                     type="range" 
                     min="5" 
@@ -408,13 +414,30 @@ export default function Whiteboard() {
                 </div>
               )}
               {tool === 'text' && (
-                <div className="flex items-center space-x-2">
-                  <label>Text Color:</label>
+                <div className="flex items-center gap-2">
+                  <label className="whitespace-nowrap">Text Color:</label>
                   <input 
                     type="color" 
                     value={textColor} 
                     onChange={(e) => setTextColor(e.target.value)} 
-                    className="w-8 h-8 p-0 border-none bg-transparent"
+                    className="w-8 h-8 border-none bg-transparent"
+                  />
+                  <label className="whitespace-nowrap">Font Size:</label>
+                  {/* Font size input now allows typing a number. */}
+                  <input 
+                    type="number" 
+                    min="10"
+                    max="50"
+                    value={textFontSize} 
+                    onChange={(e) => {
+                      const newSize = Number(e.target.value);
+                      setTextFontSize(newSize);
+                      // if there is an active text box, update its fontSize and height accordingly
+                      if (textBox) {
+                        setTextBox(prev => prev ? { ...prev, fontSize: newSize, height: Math.max(40, newSize * 2) } : null);
+                      }
+                    }}
+                    className="w-16 border rounded px-1 py-0.5 text-black"
                   />
                 </div>
               )}
@@ -500,9 +523,9 @@ export default function Whiteboard() {
               <>
                 <text
                   x={element.x}
-                  y={element.y + 30}
+                  y={element.y + element.fontSize}
                   fill={element.color}
-                  fontSize="20"
+                  fontSize={element.fontSize}
                   className="pointer-events-auto"
                 >
                   {element.content}
@@ -513,7 +536,7 @@ export default function Whiteboard() {
                       x={element.x - 5}
                       y={element.y - 5}
                       width={(element.width || 100) + 10}
-                      height="40"
+                      height={element.fontSize + 10}
                       fill="none"
                       stroke="#0070f3"
                       strokeWidth="1"
@@ -587,7 +610,8 @@ export default function Whiteboard() {
                 onChange={handleTextChange}
                 onBlur={() => { if (!isResizingTextBox) finalizeText(); }}
                 onMouseDown={(e) => e.stopPropagation()}
-                className={`w-full h-full border-2 rounded p-2 text-lg outline-none resize-none font-sans ${
+                style={{ fontSize: textBox.fontSize, resize: 'none' }}
+                className={`w-full h-full border-2 rounded p-2 text-lg outline-none font-sans ${
                   darkMode ? 'bg-gray-700 text-white border-gray-500' : 'bg-white text-black border-blue-600'
                 }`}
                 onKeyDown={(e) => e.key === 'Enter' && e.target.blur()}
