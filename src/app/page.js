@@ -432,38 +432,39 @@ export default function Whiteboard() {
       } flex flex-col min-h-screen p-2`}
     >
       <Toolbar
-        activeBoard={activeBoard}
-        activeBoardId={activeBoardId}
-        setBoards={setBoards}
-        setSelectedElements={setSelectedElements}
-        setMode={setMode}
-        mode={mode}
-        selectedElements={selectedElements}
-        deleteElement={deleteElement}
-        switchToWriteMode={switchToWriteMode}
-        setTool={setTool}
-        tool={tool}
-        penColor={penColor}
-        setPenColor={setPenColor}
-        penWidth={penWidth}
-        setPenWidth={setPenWidth}
-        highlightColor={highlightColor}
-        setHighlightColor={setHighlightColor}
-        highlightWidth={highlightWidth}
-        setHighlightWidth={setHighlightWidth}
-        textColor={textColor}
-        setTextColor={setTextColor}
-        textFontSize={textFontSize}
-        setTextFontSize={setTextFontSize}
-        textBox={textBox}
-        setTextBox={setTextBox}
-        handlePdfUpload={handlePdfUpload}
-        boards={boards}
-        addBoard={addBoard}
-        deleteBoard={deleteBoard}
-        darkMode={darkMode}
-        setDarkMode={setDarkMode}
-      />
+              activeBoard={activeBoard}
+              activeBoardId={activeBoardId}
+              setActiveBoardId={setActiveBoardId}
+              setBoards={setBoards}
+              setSelectedElements={setSelectedElements}
+              setMode={setMode}
+              mode={mode}
+              selectedElements={selectedElements}
+              deleteElement={deleteElement}
+              switchToWriteMode={switchToWriteMode}
+              setTool={setTool}
+              tool={tool}
+              penColor={penColor}
+              setPenColor={setPenColor}
+              penWidth={penWidth}
+              setPenWidth={setPenWidth}
+              highlightColor={highlightColor}
+              setHighlightColor={setHighlightColor}
+              highlightWidth={highlightWidth}
+              setHighlightWidth={setHighlightWidth}
+              textColor={textColor}
+              setTextColor={setTextColor}
+              textFontSize={textFontSize}
+              setTextFontSize={setTextFontSize}
+              textBox={textBox}
+              setTextBox={setTextBox}
+              handlePdfUpload={handlePdfUpload}
+              boards={boards}
+              addBoard={addBoard}
+              deleteBoard={deleteBoard}
+              darkMode={darkMode}
+              setDarkMode={setDarkMode}
+            />
       {/* Responsive whiteboard container */}
       <div className="flex-grow relative overflow-hidden">
         {activeBoard.pdfUrl && (
