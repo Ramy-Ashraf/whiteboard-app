@@ -395,43 +395,44 @@ export default function Whiteboard() {
       className={`${
         darkMode ? "bg-gray-900 text-white" : "bg-gray-100 text-black"
       } flex flex-col min-h-screen p-2`}
+      style={{ touchAction: "manipulation" }}
     >
       <Toolbar
-              activeBoard={activeBoard}
-              activeBoardId={activeBoardId}
-              setActiveBoardId={setActiveBoardId}
-              setBoards={setBoards}
-              setSelectedElements={setSelectedElements}
-              setMode={setMode}
-              mode={mode}
-              selectedElements={selectedElements}
-              deleteElement={deleteElement}
-              switchToWriteMode={switchToWriteMode}
-              setTool={setTool}
-              tool={tool}
-              penColor={penColor}
-              setPenColor={setPenColor}
-              penWidth={penWidth}
-              setPenWidth={setPenWidth}
-              highlightColor={highlightColor}
-              setHighlightColor={setHighlightColor}
-              highlightWidth={highlightWidth}
-              setHighlightWidth={setHighlightWidth}
-              textColor={textColor}
-              setTextColor={setTextColor}
-              textFontSize={textFontSize}
-              setTextFontSize={setTextFontSize}
-              textBox={textBox}
-              setTextBox={setTextBox}
-              handlePdfUpload={handlePdfUpload}
-              boards={boards}
-              addBoard={addBoard}
-              deleteBoard={deleteBoard}
-              darkMode={darkMode}
-              setDarkMode={setDarkMode}
-            />
+        activeBoard={activeBoard}
+        activeBoardId={activeBoardId}
+        setActiveBoardId={setActiveBoardId}
+        setBoards={setBoards}
+        setSelectedElements={setSelectedElements}
+        setMode={setMode}
+        mode={mode}
+        selectedElements={selectedElements}
+        deleteElement={deleteElement}
+        switchToWriteMode={switchToWriteMode}
+        setTool={setTool}
+        tool={tool}
+        penColor={penColor}
+        setPenColor={setPenColor}
+        penWidth={penWidth}
+        setPenWidth={setPenWidth}
+        highlightColor={highlightColor}
+        setHighlightColor={setHighlightColor}
+        highlightWidth={highlightWidth}
+        setHighlightWidth={setHighlightWidth}
+        textColor={textColor}
+        setTextColor={setTextColor}
+        textFontSize={textFontSize}
+        setTextFontSize={setTextFontSize}
+        textBox={textBox}
+        setTextBox={setTextBox}
+        handlePdfUpload={handlePdfUpload}
+        boards={boards}
+        addBoard={addBoard}
+        deleteBoard={deleteBoard}
+        darkMode={darkMode}
+        setDarkMode={setDarkMode}
+      />
       {/* Responsive whiteboard container */}
-      <div className="flex-grow relative overflow-hidden">
+      <div className="flex-grow relative overflow-hidden" style={{ touchAction: "none" }}>
         {activeBoard.pdfUrl && (
           <iframe
             src={activeBoard.pdfUrl}
@@ -441,6 +442,7 @@ export default function Whiteboard() {
         )}
         <svg
           ref={svgRef}
+          style={{ touchAction: "none" }}
           className={`absolute inset-0 w-full h-full border ${
             activeBoard.pdfUrl
               ? "pointer-events-none"
@@ -519,6 +521,27 @@ export default function Whiteboard() {
                             })
                           );
                         }}
+                        onTouchStart={(e) => {
+                          e.stopPropagation();
+                          setIsMoveIconDragging(true);
+                          const touch = e.touches[0];
+                          dragStartPos.current = getSVGPoint(touch.clientX, touch.clientY);
+                          elementStartPositions.current = new Map(
+                            Array.from(selectedElements).map((id) => {
+                              const el = activeBoard.elements.find(
+                                (e) => e.id === id
+                              );
+                              return [
+                                id,
+                                {
+                                  x: el.x || el.points[0][0],
+                                  y: el.y || el.points[0][1],
+                                  points: el.points?.map((p) => [...p]),
+                                },
+                              ];
+                            })
+                          );
+                        }}
                       />
                     </>
                   )}
@@ -558,6 +581,30 @@ export default function Whiteboard() {
                           dragStartPos.current = getSVGPoint(
                             e.clientX,
                             e.clientY
+                          );
+                          elementStartPositions.current = new Map(
+                            Array.from(selectedElements).map((id) => {
+                              const el = activeBoard.elements.find(
+                                (e) => e.id === id
+                              );
+                              return [
+                                id,
+                                {
+                                  x: el.x || el.points[0][0],
+                                  y: el.y || el.points[0][1],
+                                  points: el.points?.map((p) => [...p]),
+                                },
+                              ];
+                            })
+                          );
+                        }}
+                        onTouchStart={(e) => {
+                          e.stopPropagation();
+                          setIsMoveIconDragging(true);
+                          const touch = e.touches[0];
+                          dragStartPos.current = getSVGPoint(
+                            touch.clientX,
+                            touch.clientY
                           );
                           elementStartPositions.current = new Map(
                             Array.from(selectedElements).map((id) => {
@@ -646,6 +693,12 @@ export default function Whiteboard() {
                     e.stopPropagation();
                     setIsResizingTextBox(true);
                     resizeStartPos.current = getSVGPoint(e.clientX, e.clientY);
+                  }}
+                  onTouchStart={(e) => {
+                    e.stopPropagation();
+                    setIsResizingTextBox(true);
+                    const touch = e.touches[0];
+                    resizeStartPos.current = getSVGPoint(touch.clientX, touch.clientY);
                   }}
                   style={{
                     position: "absolute",
