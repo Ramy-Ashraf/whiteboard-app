@@ -223,48 +223,13 @@ export default function Whiteboard() {
         points: [...prev.points, [svgPoint.x, svgPoint.y]],
       }));
     } else if (mode === "select" && isDragging) {
-      setSelectionRect({
+      const newRect = {
         x1: Math.min(dragStartPos.current.x, svgPoint.x),
         y1: Math.min(dragStartPos.current.y, svgPoint.y),
         x2: Math.max(dragStartPos.current.x, svgPoint.x),
         y2: Math.max(dragStartPos.current.y, svgPoint.y),
-      });
-
-      if (selectedElements.size > 0) {
-        const deltaX = svgPoint.x - dragStartPos.current.x;
-        const deltaY = svgPoint.y - dragStartPos.current.y;
-
-        setActiveBoardElements((prev) =>
-          prev.map((el) => {
-            if (!selectedElements.has(el.id)) return el;
-            const startPos = elementStartPositions.current.get(el.id);
-            if (!startPos) return el;
-
-            if (el.type === "text") {
-              return {
-                ...el,
-                x: startPos.x + deltaX,
-                y: startPos.y + deltaY,
-              };
-            }
-            return {
-              ...el,
-              points: startPos.points.map(([px, py]) => [
-                px + deltaX,
-                py + deltaY,
-              ]),
-            };
-          })
-        );
-      } else {
-        const newSelection = new Set();
-        activeBoard.elements.forEach((element) => {
-          if (isElementInSelection(element, selectionRect)) {
-            newSelection.add(element.id);
-          }
-        });
-        setSelectedElements(newSelection);
-      }
+      };
+      setSelectionRect(newRect);
     }
   };
 
