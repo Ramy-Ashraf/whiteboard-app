@@ -663,6 +663,9 @@ export default function Whiteboard() {
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
         >
           {activeBoard.elements.map((element) => (
             <g key={element.id}>
