@@ -308,6 +308,20 @@ export default function Whiteboard() {
     }
   };
 
+  const handleTouchStart = (e) => {
+    const touch = e.touches[0];
+    handleMouseDown({ ...e, clientX: touch.clientX, clientY: touch.clientY });
+  };
+
+  const handleTouchMove = (e) => {
+    const touch = e.touches[0];
+    handleMouseMove({ ...e, clientX: touch.clientX, clientY: touch.clientY });
+  };
+
+  const handleTouchEnd = (e) => {
+    handleMouseUp();
+  };
+
   const handleTextChange = (e) => {
     setTextBox((prev) => ({
       ...prev,
