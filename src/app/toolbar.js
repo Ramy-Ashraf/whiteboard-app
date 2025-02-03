@@ -103,7 +103,7 @@ const Toolbar = ({
                 title="Delete"
                 className="px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none bg-red-600 text-white"
               >
-                <LuTrash size={24} />
+                <LuX size={24} />
               </button>
             )}
             {mode === "write" && (
