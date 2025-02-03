@@ -319,6 +319,7 @@ export default function Whiteboard() {
   };
 
   const handleTouchEnd = (e) => {
+    e.preventDefault();
     handleMouseUp();
   };
 
