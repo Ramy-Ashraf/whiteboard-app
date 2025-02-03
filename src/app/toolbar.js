@@ -1,16 +1,16 @@
 import React from "react";
 import {
-  FaPen,
-  FaMousePointer,
-  FaTimes,
-  FaPaintBrush,
-  FaFont,
-  FaUpload,
-  FaTrash,
-  FaMoon,
-  FaSun,
-  FaHighlighter,
-} from "react-icons/fa";
+  LuPenTool,
+  LuMousePointer,
+  LuX,
+  LuBrush,
+  LuType,
+  LuUpload,
+  LuTrash,
+  LuMoon,
+  LuSun,
+  LuHighlighter,
+} from "react-icons/lu";
 
 const Toolbar = ({
   activeBoard,
@@ -67,7 +67,7 @@ const Toolbar = ({
               title="Exit Upload"
               className="px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none bg-gray-200 text-gray-700 hover:bg-gray-300"
             >
-              <FaTimes size={24} />
+              <LuX size={24} />
             </button>
           </div>
         ) : (
@@ -81,7 +81,7 @@ const Toolbar = ({
                   : "bg-gray-200 text-gray-700 hover:bg-gray-300"
               }`}
             >
-              <FaPen size={24} />
+              <LuPenTool size={24} />
             </button>
             <button
               onClick={() => setMode("select")}
@@ -92,7 +92,7 @@ const Toolbar = ({
                   : "bg-gray-200 text-gray-700 hover:bg-gray-300"
               }`}
             >
-              <FaMousePointer size={24} />
+              <LuMousePointer size={24} />
             </button>
             {mode === "select" && selectedElements.size > 0 && (
               <button
@@ -100,7 +100,7 @@ const Toolbar = ({
                 title="Delete"
                 className="px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none bg-red-600 text-white"
               >
-                <FaTrash size={24} />
+                <LuTrash size={24} />
               </button>
             )}
             {mode === "write" && (
@@ -114,7 +114,7 @@ const Toolbar = ({
                       : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                   }`}
                 >
-                  <FaPaintBrush size={24} />
+                  <LuBrush size={24} />
                 </button>
                 <button
                   onClick={() => setTool("highlight")}
@@ -125,7 +125,7 @@ const Toolbar = ({
                       : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                   }`}
                 >
-                  <FaHighlighter size={24} />
+                  <LuHighlighter size={24} />
                 </button>
                 <button
                   onClick={() => setTool("text")}
@@ -136,7 +136,7 @@ const Toolbar = ({
                       : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                   }`}
                 >
-                  <FaFont size={24} />
+                  <LuType size={24} />
                 </button>
 
                 {tool === "pen" && (
@@ -227,7 +227,7 @@ const Toolbar = ({
           title="Upload PDF"
           className="cursor-pointer inline-flex items-center px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none bg-gray-200 text-gray-700 hover:bg-gray-300"
         >
-          <FaUpload size={24} />
+          <LuUpload size={24} />
           <input
             type="file"
             accept="application/pdf"
@@ -259,14 +259,18 @@ const Toolbar = ({
           title="Delete Board"
           className="px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none bg-red-600 text-white"
         >
-          <FaTrash size={24} />
+          <LuTrash size={24} />
         </button>
         <button
           onClick={() => setDarkMode((prev) => !prev)}
           title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
           className="px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none bg-gray-200"
         >
-          {darkMode ? <FaSun size={24} color="#FDB813" /> : <FaMoon size={24} />}
+          {darkMode ? (
+            <LuSun size={24} color="#FDB813" />
+          ) : (
+            <LuMoon size={24} />
+          )}
         </button>
       </div>
     </div>
