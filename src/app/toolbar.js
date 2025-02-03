@@ -34,10 +34,10 @@ const Toolbar = ({
   setDarkMode,
 }) => {
   return (
-    <div className="mb-2 flex items-center justify-between">
-      <div className="flex flex-wrap items-center gap-2">
+    <div className="mb-2 flex flex-col md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col sm:flex-row flex-wrap items-center gap-2">
         {activeBoard.pdfUrl ? (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-center gap-2">
             <h1 className="text-2xl font-bold">
               Uploaded: {activeBoard.pdfUrl.split("/").pop()}
             </h1>
@@ -57,7 +57,7 @@ const Toolbar = ({
             </button>
           </div>
         ) : (
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-col sm:flex-row flex-wrap items-center gap-2">
             <button
               onClick={switchToWriteMode}
               className={`px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none ${
@@ -120,7 +120,7 @@ const Toolbar = ({
                 </button>
 
                 {tool === "pen" && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col sm:flex-row items-center gap-2">
                     <label className="whitespace-nowrap">Pen Color:</label>
                     <input
                       type="color"
@@ -139,7 +139,7 @@ const Toolbar = ({
                   </div>
                 )}
                 {tool === "highlight" && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col sm:flex-row items-center gap-2">
                     <label className="whitespace-nowrap">
                       Highlight Color:
                     </label>
@@ -164,7 +164,7 @@ const Toolbar = ({
                   </div>
                 )}
                 {tool === "text" && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col sm:flex-row items-center gap-2">
                     <label className="whitespace-nowrap">Text Color:</label>
                     <input
                       type="color"
@@ -202,7 +202,7 @@ const Toolbar = ({
           </div>
         )}
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row items-center gap-2 mt-2 md:mt-0">
         <label className="cursor-pointer inline-flex items-center px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none bg-gray-200 text-gray-700 hover:bg-gray-300">
           <span className="mr-2">📤</span> Upload PDF
           <input
