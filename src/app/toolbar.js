@@ -1,4 +1,17 @@
 import React from "react";
+import {
+  FaPen,
+  FaMousePointer,
+  FaTimes,
+  FaPaintBrush,
+  FaFont,
+  FaUpload,
+  FaTrash,
+  FaMoon,
+  FaSun,
+  FaHighlighter,
+} from "react-icons/fa";
+
 const Toolbar = ({
   activeBoard,
   activeBoardId,
@@ -39,7 +52,7 @@ const Toolbar = ({
         {activeBoard.pdfUrl ? (
           <div className="flex flex-col sm:flex-row items-center gap-2">
             <h1 className="text-2xl font-bold">
-              Uploaded: {activeBoard.pdfUrl.split("/").pop()}
+              {activeBoard.pdfUrl.split("/").pop()}
             </h1>
             <button
               onClick={() =>
@@ -51,72 +64,79 @@ const Toolbar = ({
                   )
                 )
               }
+              title="Exit Upload"
               className="px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none bg-gray-200 text-gray-700 hover:bg-gray-300"
             >
-              Exit Upload
+              <FaTimes size={24} />
             </button>
           </div>
         ) : (
           <div className="flex flex-col sm:flex-row flex-wrap items-center gap-2">
             <button
               onClick={switchToWriteMode}
+              title="Write"
               className={`px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none ${
                 mode === "write"
                   ? "bg-blue-600 text-white"
                   : "bg-gray-200 text-gray-700 hover:bg-gray-300"
               }`}
             >
-              ✏️ Write
+              <FaPen size={24} />
             </button>
             <button
               onClick={() => setMode("select")}
+              title="Select"
               className={`px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none ${
                 mode === "select"
                   ? "bg-blue-600 text-white"
                   : "bg-gray-200 text-gray-700 hover:bg-gray-300"
               }`}
             >
-              ✥ Select
+              <FaMousePointer size={24} />
             </button>
             {mode === "select" && selectedElements.size > 0 && (
               <button
                 onClick={deleteElement}
+                title="Delete"
                 className="px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none bg-red-600 text-white"
               >
-                Delete
+                <FaTrash size={24} />
               </button>
             )}
             {mode === "write" && (
               <>
                 <button
                   onClick={() => setTool("pen")}
+                  title="Pen"
                   className={`px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none ${
                     tool === "pen"
                       ? "bg-blue-600 text-white"
                       : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                   }`}
                 >
-                  🖌 Pen
+                  <FaPaintBrush size={24} />
                 </button>
                 <button
                   onClick={() => setTool("highlight")}
+                  title="Highlight"
                   className={`px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none ${
                     tool === "highlight"
                       ? "bg-blue-600 text-white"
                       : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                   }`}
                 >
-                  🖍 Highlight
+                  <FaHighlighter size={24} />
                 </button>
                 <button
                   onClick={() => setTool("text")}
+                  title="Text"
                   className={`px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none ${
                     tool === "text"
                       ? "bg-blue-600 text-white"
                       : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                   }`}
                 >
-                  🔤 Text
+                  <FaFont size={24} />
                 </button>
 
                 {tool === "pen" && (
@@ -203,8 +223,11 @@ const Toolbar = ({
         )}
       </div>
       <div className="flex flex-col sm:flex-row items-center gap-2 mt-2 md:mt-0">
-        <label className="cursor-pointer inline-flex items-center px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none bg-gray-200 text-gray-700 hover:bg-gray-300">
-          <span className="mr-2">📤</span> Upload PDF
+        <label
+          title="Upload PDF"
+          className="cursor-pointer inline-flex items-center px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none bg-gray-200 text-gray-700 hover:bg-gray-300"
+        >
+          <FaUpload size={24} />
           <input
             type="file"
             accept="application/pdf"
@@ -233,15 +256,17 @@ const Toolbar = ({
         </select>
         <button
           onClick={() => deleteBoard(activeBoardId)}
+          title="Delete Board"
           className="px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none bg-red-600 text-white"
         >
-          Delete Board
+          <FaTrash size={24} />
         </button>
         <button
           onClick={() => setDarkMode((prev) => !prev)}
-          className="px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none bg-gray-200 text-white"
+          title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+          className="px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none bg-gray-200"
         >
-          {darkMode ? "☀" : "🌙"}
+          {darkMode ? <FaSun size={24} color="#FDB813" /> : <FaMoon size={24} />}
         </button>
       </div>
     </div>
