@@ -434,7 +434,7 @@ export default function Whiteboard() {
       {/* Responsive whiteboard container */}
       <div
         className="flex-grow relative overflow-hidden min-h-auto"
-        style={{ height: "calc(100vh - 50px)", touchAction: "none" }}
+        style={{ height: "calc(90vh - 50px)", touchAction: "none" }}
       >
         {activeBoard.pdfUrl && (
           <iframe
