@@ -432,7 +432,7 @@ export default function Whiteboard() {
         setDarkMode={setDarkMode}
       />
       {/* Responsive whiteboard container */}
-      <div className="flex-grow relative overflow-hidden pb-12" style={{ touchAction: "none" }}>
+      <div className="flex-grow relative overflow-hidden min-h-auto" style={{ touchAction: "none" }}>
         {activeBoard.pdfUrl && (
           <iframe
             src={activeBoard.pdfUrl}
