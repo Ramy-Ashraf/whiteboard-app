@@ -394,8 +394,8 @@ export default function Whiteboard() {
     <div
       className={`${
         darkMode ? "bg-gray-900 text-white" : "bg-gray-100 text-black"
-      } flex flex-col min-h-screen overflow-hidden p-2`}
-      style={{ touchAction: "manipulation" }}
+      } flex flex-col min-h-screen p-2`}
+      style={{ touchAction: "manipulation", overflow: "hidden" }}
     >
       <Toolbar
         activeBoard={activeBoard}
@@ -433,7 +433,7 @@ export default function Whiteboard() {
       />
       {/* Responsive whiteboard container */}
       <div
-        className="flex-grow relative overflow-hidden min-h-auto"
+        className="flex-grow relative overflow-hidden"
         style={{touchAction: "none" }}
       >
         {activeBoard.pdfUrl && (
