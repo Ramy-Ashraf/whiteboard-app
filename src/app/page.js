@@ -394,7 +394,7 @@ export default function Whiteboard() {
     <div
       className={`${
         darkMode ? "bg-gray-900 text-white" : "bg-gray-100 text-black"
-      } flex flex-col h-screen p-2`}
+      } flex flex-col min-h-screen overflow-hidden p-2`}
       style={{ touchAction: "manipulation" }}
     >
       <Toolbar
@@ -434,7 +434,7 @@ export default function Whiteboard() {
       {/* Responsive whiteboard container */}
       <div
         className="flex-grow relative overflow-hidden min-h-auto"
-        style={{ height: "calc(90vh - 50px)", touchAction: "none" }}
+        style={{touchAction: "none" }}
       >
         {activeBoard.pdfUrl && (
           <iframe
