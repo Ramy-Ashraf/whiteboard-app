@@ -394,7 +394,7 @@ export default function Whiteboard() {
     <div
       className={`${
         darkMode ? "bg-gray-900 text-white" : "bg-gray-100 text-black"
-      } flex flex-col min-h-screen p-2`}
+      } flex flex-col h-screen p-2`}
       style={{ touchAction: "manipulation" }}
     >
       <Toolbar
@@ -432,7 +432,10 @@ export default function Whiteboard() {
         setDarkMode={setDarkMode}
       />
       {/* Responsive whiteboard container */}
-      <div className="flex-grow relative overflow-hidden min-h-auto" style={{ touchAction: "none" }}>
+      <div
+        className="flex-grow relative overflow-hidden min-h-auto"
+        style={{ height: "calc(100vh - 50px)", touchAction: "none" }}
+      >
         {activeBoard.pdfUrl && (
           <iframe
             src={activeBoard.pdfUrl}
@@ -525,7 +528,10 @@ export default function Whiteboard() {
                           e.stopPropagation();
                           setIsMoveIconDragging(true);
                           const touch = e.touches[0];
-                          dragStartPos.current = getSVGPoint(touch.clientX, touch.clientY);
+                          dragStartPos.current = getSVGPoint(
+                            touch.clientX,
+                            touch.clientY
+                          );
                           elementStartPositions.current = new Map(
                             Array.from(selectedElements).map((id) => {
                               const el = activeBoard.elements.find(
@@ -698,7 +704,10 @@ export default function Whiteboard() {
                     e.stopPropagation();
                     setIsResizingTextBox(true);
                     const touch = e.touches[0];
-                    resizeStartPos.current = getSVGPoint(touch.clientX, touch.clientY);
+                    resizeStartPos.current = getSVGPoint(
+                      touch.clientX,
+                      touch.clientY
+                    );
                   }}
                   style={{
                     position: "absolute",
