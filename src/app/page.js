@@ -390,12 +390,24 @@ export default function Whiteboard() {
     }
   }, [textBox]);
 
+  useEffect(() => {
+    const setVh = () => {
+      const vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
+    };
+    setVh();
+    window.addEventListener('resize', setVh);
+    return () => window.removeEventListener('resize', setVh);
+  }, []);
+
   return (
     <div
       className={`${
         darkMode ? "bg-gray-900 text-white" : "bg-gray-100 text-black"
-      } flex flex-col min-h-screen p-2`}
-      style={{ touchAction: "manipulation", overflow: "hidden" }}
+      } flex flex-col h-screen p-2 overflow-hidden`}
+      style={{
+        height: "calc(var(--vh, 1vh) * 100)", 
+        touchAction: "manipulation" }}
     >
       <Toolbar
         activeBoard={activeBoard}
@@ -432,10 +444,7 @@ export default function Whiteboard() {
         setDarkMode={setDarkMode}
       />
       {/* Responsive whiteboard container */}
-      <div
-        className="flex-grow relative overflow-hidden"
-        style={{touchAction: "none" }}
-      >
+      <div className="flex-grow relative overflow-auto" style={{ touchAction: "none" }}>
         {activeBoard.pdfUrl && (
           <iframe
             src={activeBoard.pdfUrl}
