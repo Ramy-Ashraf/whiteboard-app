@@ -37,7 +37,7 @@ export default function Whiteboard() {
   const [highlightColor, setHighlightColor] = useState("#FFFF00");
   const [textColor, setTextColor] = useState("#000000");
   const [penWidth, setPenWidth] = useState(2);
-  const [highlightWidth, setHighlightWidth] = useState(10);
+  const [highlightWidth, setHighlightWidth] = useState(40);
   const [selectedElements, setSelectedElements] = useState(new Set());
   const [drawing, setDrawing] = useState(false);
   const [currentPath, setCurrentPath] = useState(null);
@@ -393,11 +393,11 @@ export default function Whiteboard() {
   useEffect(() => {
     const setVh = () => {
       const vh = window.innerHeight * 0.01;
-      document.documentElement.style.setProperty('--vh', `${vh}px`);
+      document.documentElement.style.setProperty("--vh", `${vh}px`);
     };
     setVh();
-    window.addEventListener('resize', setVh);
-    return () => window.removeEventListener('resize', setVh);
+    window.addEventListener("resize", setVh);
+    return () => window.removeEventListener("resize", setVh);
   }, []);
 
   return (
@@ -406,8 +406,9 @@ export default function Whiteboard() {
         darkMode ? "bg-gray-900 text-white" : "bg-gray-100 text-black"
       } flex flex-col h-screen p-2 overflow-hidden`}
       style={{
-        height: "calc(var(--vh, 1vh) * 100)", 
-        touchAction: "manipulation" }}
+        height: "calc(var(--vh, 1vh) * 100)",
+        touchAction: "manipulation",
+      }}
     >
       <Toolbar
         activeBoard={activeBoard}
@@ -444,7 +445,10 @@ export default function Whiteboard() {
         setDarkMode={setDarkMode}
       />
       {/* Responsive whiteboard container */}
-      <div className="flex-grow relative overflow-auto" style={{ touchAction: "none" }}>
+      <div
+        className="flex-grow relative overflow-auto"
+        style={{ touchAction: "none" }}
+      >
         {activeBoard.pdfUrl && (
           <iframe
             src={activeBoard.pdfUrl}
@@ -651,7 +655,7 @@ export default function Whiteboard() {
               stroke={currentPath.color}
               fill="none"
               strokeWidth={currentPath.strokeWidth}
-              opacity={currentPath.type === "highlight" ? 0.5 : 1}
+              opacity={currentPath.type === "highlight" ? 0.3 : 0.5}
             />
           )}
 

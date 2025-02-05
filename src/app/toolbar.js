@@ -49,29 +49,82 @@ const Toolbar = ({
   return (
     <div className="mb-2 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
       {activeBoard.pdfUrl ? (
-        // When showing PDF, keep the pdf controls in one row
-        <div className="flex flex-col sm:flex-row items-center gap-2 w-full">
-          <h1 className="text-2xl font-bold">
-            {activeBoard.pdfUrl.split("/").pop()}
-          </h1>
-          <button
-            onClick={() =>
-              setBoards((prevBoards) =>
-                prevBoards.map((board) =>
-                  board.id === activeBoardId
-                    ? { ...board, pdfUrl: null }
-                    : board
+        <>
+          {/* PDF mode header */}
+          <div className="flex flex-row items-center gap-2 w-full">
+            <h1 className="text-2xl font-bold">
+              {activeBoard.pdfUrl.split("/").pop()}
+            </h1>
+            <button
+              onClick={() =>
+                setBoards((prevBoards) =>
+                  prevBoards.map((board) =>
+                    board.id === activeBoardId
+                      ? { ...board, pdfUrl: null }
+                      : board
+                  )
                 )
-              )
-            }
-            title="Exit Upload"
-            className="px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none bg-gray-200 text-gray-700 hover:bg-gray-300"
-          >
-            <LuX size={24} />
-          </button>
-        </div>
+              }
+              title="Exit Upload"
+              className="px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none bg-gray-200 text-gray-700 hover:bg-gray-300"
+            >
+              <LuX size={24} />
+            </button>
+          </div>
+          {/* Level 3 buttons */}
+          <div className="flex flex-nowrap items-center gap-2 justify-center md:justify-end">
+            <label
+              title="Upload PDF"
+              className="cursor-pointer inline-flex items-center px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none bg-gray-200 text-gray-700 hover:bg-gray-300"
+            >
+              <LuUpload size={24} />
+              <input
+                type="file"
+                accept="application/pdf"
+                onChange={handlePdfUpload}
+                className="hidden"
+              />
+            </label>
+            <select
+              value={activeBoardId}
+              onChange={(e) => {
+                if (e.target.value === "add") {
+                  addBoard();
+                } else {
+                  setActiveBoardId(Number(e.target.value));
+                  setSelectedElements(new Set());
+                }
+              }}
+              className="px-3 py-1 rounded shadow focus:outline-none bg-gray-200 text-gray-700 hover:bg-gray-300"
+            >
+              {boards.map((board) => (
+                <option key={board.id} value={board.id}>
+                  {board.name}
+                </option>
+              ))}
+              <option value="add">+ Add Board</option>
+            </select>
+            <button
+              onClick={() => deleteBoard(activeBoardId)}
+              title="Delete Board"
+              className="px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none bg-red-600 text-white"
+            >
+              <LuTrash size={24} />
+            </button>
+            <button
+              onClick={() => setDarkMode((prev) => !prev)}
+              title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+              className="px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none bg-gray-200"
+            >
+              {darkMode ? (
+                <LuSun size={24} color="#FDB813" />
+              ) : (
+                <LuMoon size={24} />
+              )}
+            </button>
+          </div>
+        </>
       ) : (
-        // When not in PDF mode, render three mobile levels (rows)
         <>
           {/* Level 1: Mode and tool selection */}
           <div className="flex flex-wrap items-center gap-2 justify-center md:justify-start">
