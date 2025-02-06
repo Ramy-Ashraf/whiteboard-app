@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   LuPenTool,
   LuMousePointer,
@@ -10,6 +10,8 @@ import {
   LuMoon,
   LuSun,
   LuHighlighter,
+  LuCircle,
+  LuSquare,
 } from "react-icons/lu";
 
 const Toolbar = ({
@@ -45,7 +47,37 @@ const Toolbar = ({
   deleteBoard,
   darkMode,
   setDarkMode,
+  startRecording,
+  stopRecording,
 }) => {
+  const [isRecording, setIsRecording] = useState(false);
+
+  const toggleRecording = () => {
+    if (isRecording) {
+      stopRecording();
+      setIsRecording(false);
+    } else {
+      startRecording();
+      setIsRecording(true);
+    }
+  };
+
+  const RecordingButton = (
+    <button
+      onClick={toggleRecording}
+      title={isRecording ? "Stop Recording" : "Start Recording"}
+      className={`px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none ${
+        isRecording ? "bg-red-600 text-white" : "bg-gray-200 text-white"
+      }`}
+    >
+      {isRecording ? (
+        <LuSquare size={24} />
+      ) : (
+        <LuCircle size={24} color="red" />
+      )}
+    </button>
+  );
+
   return (
     <div className="mb-2 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
       {activeBoard.pdfUrl ? (
@@ -122,6 +154,7 @@ const Toolbar = ({
                 <LuMoon size={24} />
               )}
             </button>
+            {RecordingButton}
           </div>
         </>
       ) : (
@@ -222,18 +255,14 @@ const Toolbar = ({
               )}
               {tool === "highlight" && (
                 <div className="flex flex-wrap items-center gap-2">
-                  <label className="whitespace-nowrap">
-                    Highlight Color:
-                  </label>
+                  <label className="whitespace-nowrap">Highlight Color:</label>
                   <input
                     type="color"
                     value={highlightColor}
                     onChange={(e) => setHighlightColor(e.target.value)}
                     className="w-8 h-8 border-none bg-transparent"
                   />
-                  <label className="whitespace-nowrap">
-                    Highlight Width:
-                  </label>
+                  <label className="whitespace-nowrap">Highlight Width:</label>
                   <input
                     type="number"
                     min="1"
@@ -286,7 +315,7 @@ const Toolbar = ({
           <div className="flex flex-wrap items-center gap-2 justify-center md:justify-end">
             <label
               title="Upload PDF"
-              className="hidden md:inline-flex cursor-pointer inline-flex items-center px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none bg-gray-200 text-gray-700 hover:bg-gray-300"
+              className="hidden md:inline-flex cursor-pointer items-center px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none bg-gray-200 text-gray-700 hover:bg-gray-300"
             >
               <LuUpload size={24} />
               <input
@@ -333,6 +362,7 @@ const Toolbar = ({
                 <LuMoon size={24} />
               )}
             </button>
+            {RecordingButton}
           </div>
         </>
       )}

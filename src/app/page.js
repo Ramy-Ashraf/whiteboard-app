@@ -4,32 +4,22 @@ import { useState, useRef, useEffect } from "react";
 import Toolbar from "./toolbar";
 
 export default function Whiteboard() {
-  // Board management: each board has its own elements
+  // Board management states…
   const [boards, setBoards] = useState([
     { id: 1, name: "Board 1", elements: [], pdfUrl: null },
     { id: 2, name: "Board 2", elements: [], pdfUrl: null },
   ]);
-
   const [activeBoardId, setActiveBoardId] = useState(1);
   const activeBoard = boards.find((b) => b.id === activeBoardId) || {
     elements: [],
   };
 
-  // Replace setElements with an updater that only updates the active board.
-  const setActiveBoardElements = (updater) => {
-    setBoards((prevBoards) =>
-      prevBoards.map((board) => {
-        if (board.id === activeBoardId) {
-          const newElements =
-            typeof updater === "function" ? updater(board.elements) : updater;
-          return { ...board, elements: newElements };
-        }
-        return board;
-      })
-    );
-  };
+  // Recorder state
+  const [isRecording, setIsRecording] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState(null);
+  const recordedChunksRef = useRef([]);
 
-  // All other states remain unchanged.
+  // Other whiteboard states…
   const [darkMode, setDarkMode] = useState(true);
   const [mode, setMode] = useState("write");
   const [tool, setTool] = useState("pen");
@@ -47,7 +37,6 @@ export default function Whiteboard() {
   const [isMoveIconDragging, setIsMoveIconDragging] = useState(false);
   const [isResizingTextBox, setIsResizingTextBox] = useState(false);
   const [textFontSize, setTextFontSize] = useState(20);
-  // const [pdfUrl, setPdfUrl] = useState(null);
 
   const svgRef = useRef(null);
   const textInputRef = useRef(null);
@@ -63,6 +52,23 @@ export default function Whiteboard() {
     };
   };
 
+  // Update only active board's elements.
+  const setActiveBoardElements = (updater) => {
+    setBoards((prevBoards) =>
+      prevBoards.map((board) => {
+        if (board.id === activeBoardId) {
+          const newElements =
+            typeof updater === "function"
+              ? updater(board.elements)
+              : updater;
+          return { ...board, elements: newElements };
+        }
+        return board;
+      })
+    );
+  };
+
+  // PDF upload handling
   const handlePdfUpload = (e) => {
     const file = e.target.files[0];
     if (file && file.type === "application/pdf") {
@@ -75,6 +81,49 @@ export default function Whiteboard() {
     }
   };
 
+  // Recording functions using getDisplayMedia and MediaRecorder
+  const startRecording = () => {
+    navigator.mediaDevices
+      .getDisplayMedia({ video: true })
+      .then((stream) => {
+        const options = { mimeType: "video/webm" };
+        const recorder = new MediaRecorder(stream, options);
+        recorder.ondataavailable = (e) => {
+          if (e.data.size > 0) {
+            recordedChunksRef.current.push(e.data);
+          }
+        };
+        recorder.onstop = () => {
+          stream.getTracks().forEach((track) => track.stop());
+          const blob = new Blob(recordedChunksRef.current, {
+            type: "video/webm",
+          });
+          recordedChunksRef.current = [];
+          const url = URL.createObjectURL(blob);
+          // Create a temporary link to download the recorded video.
+          const a = document.createElement("a");
+          a.style.display = "none";
+          a.href = url;
+          a.download = "recording.webm";
+          document.body.appendChild(a);
+          a.click();
+          URL.revokeObjectURL(url);
+        };
+        recorder.start();
+        setMediaRecorder(recorder);
+        setIsRecording(true);
+      })
+      .catch((err) => console.error("Error starting recording:", err));
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorder) {
+      mediaRecorder.stop();
+      setIsRecording(false);
+    }
+  };
+
+  // Mouse and touch event handlers …
   const handleMouseDown = (e) => {
     const svgPoint = getSVGPoint(e.clientX, e.clientY);
     if (mode === "write") {
@@ -178,10 +227,7 @@ export default function Whiteboard() {
           }
           return {
             ...el,
-            points: startPos.points.map(([px, py]) => [
-              px + deltaX,
-              py + deltaY,
-            ]),
+            points: startPos.points.map(([px, py]) => [px + deltaX, py + deltaY]),
           };
         })
       );
@@ -365,17 +411,12 @@ export default function Whiteboard() {
   // Helper: delete a board by its id
   const deleteBoard = (boardId) => {
     setBoards((prevBoards) => {
-      // Prevent deletion if there's only one board
       if (prevBoards.length === 1) return prevBoards;
-
       const updatedBoards = prevBoards.filter((board) => board.id !== boardId);
-      // Renumber boards names sequentially
       const renumberedBoards = updatedBoards.map((board, index) => ({
         ...board,
         name: `Board ${index + 1}`,
       }));
-
-      // If the deleted board was active, update active board to the first available board
       if (boardId === activeBoardId) {
         setActiveBoardId(renumberedBoards[0]?.id || null);
       }
@@ -383,7 +424,7 @@ export default function Whiteboard() {
     });
   };
 
-  // When textBox becomes active, focus on the textarea.
+  // Focus on the textarea when textBox becomes active.
   useEffect(() => {
     if (textBox?.active && textInputRef.current) {
       textInputRef.current.focus();
@@ -443,7 +484,11 @@ export default function Whiteboard() {
         deleteBoard={deleteBoard}
         darkMode={darkMode}
         setDarkMode={setDarkMode}
+        isRecording={isRecording}
+        startRecording={startRecording}
+        stopRecording={stopRecording}
       />
+
       {/* Responsive whiteboard container */}
       <div
         className="flex-grow relative overflow-auto"
@@ -517,15 +562,10 @@ export default function Whiteboard() {
                         onMouseDown={(e) => {
                           e.stopPropagation();
                           setIsMoveIconDragging(true);
-                          dragStartPos.current = getSVGPoint(
-                            e.clientX,
-                            e.clientY
-                          );
+                          dragStartPos.current = getSVGPoint(e.clientX, e.clientY);
                           elementStartPositions.current = new Map(
                             Array.from(selectedElements).map((id) => {
-                              const el = activeBoard.elements.find(
-                                (e) => e.id === id
-                              );
+                              const el = activeBoard.elements.find((e) => e.id === id);
                               return [
                                 id,
                                 {
@@ -541,15 +581,10 @@ export default function Whiteboard() {
                           e.stopPropagation();
                           setIsMoveIconDragging(true);
                           const touch = e.touches[0];
-                          dragStartPos.current = getSVGPoint(
-                            touch.clientX,
-                            touch.clientY
-                          );
+                          dragStartPos.current = getSVGPoint(touch.clientX, touch.clientY);
                           elementStartPositions.current = new Map(
                             Array.from(selectedElements).map((id) => {
-                              const el = activeBoard.elements.find(
-                                (e) => e.id === id
-                              );
+                              const el = activeBoard.elements.find((e) => e.id === id);
                               return [
                                 id,
                                 {
@@ -597,15 +632,10 @@ export default function Whiteboard() {
                         onMouseDown={(e) => {
                           e.stopPropagation();
                           setIsMoveIconDragging(true);
-                          dragStartPos.current = getSVGPoint(
-                            e.clientX,
-                            e.clientY
-                          );
+                          dragStartPos.current = getSVGPoint(e.clientX, e.clientY);
                           elementStartPositions.current = new Map(
                             Array.from(selectedElements).map((id) => {
-                              const el = activeBoard.elements.find(
-                                (e) => e.id === id
-                              );
+                              const el = activeBoard.elements.find((e) => e.id === id);
                               return [
                                 id,
                                 {
@@ -621,15 +651,10 @@ export default function Whiteboard() {
                           e.stopPropagation();
                           setIsMoveIconDragging(true);
                           const touch = e.touches[0];
-                          dragStartPos.current = getSVGPoint(
-                            touch.clientX,
-                            touch.clientY
-                          );
+                          dragStartPos.current = getSVGPoint(touch.clientX, touch.clientY);
                           elementStartPositions.current = new Map(
                             Array.from(selectedElements).map((id) => {
-                              const el = activeBoard.elements.find(
-                                (e) => e.id === id
-                              );
+                              const el = activeBoard.elements.find((e) => e.id === id);
                               return [
                                 id,
                                 {
