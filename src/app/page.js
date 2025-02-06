@@ -83,21 +83,32 @@ export default function Whiteboard() {
 
   // Recording functions using getDisplayMedia and MediaRecorder
   const startRecording = () => {
-    navigator.mediaDevices
-      .getDisplayMedia({ video: true })
-      .then((stream) => {
+    Promise.all([
+      navigator.mediaDevices.getDisplayMedia({ video: true, audio: true }),
+      navigator.mediaDevices.getUserMedia({ audio: true })
+    ])
+      .then(([displayStream, micStream]) => {
+        // Combine video track from display with all available audio tracks.
+        const tracks = [
+          ...displayStream.getVideoTracks(),
+          ...displayStream.getAudioTracks(),
+          ...micStream.getAudioTracks()
+        ];
+        const combinedStream = new MediaStream(tracks);
+  
         const options = { mimeType: "video/webm" };
-        const recorder = new MediaRecorder(stream, options);
+        const recorder = new MediaRecorder(combinedStream, options);
+  
         recorder.ondataavailable = (e) => {
           if (e.data.size > 0) {
             recordedChunksRef.current.push(e.data);
           }
         };
+  
         recorder.onstop = () => {
-          stream.getTracks().forEach((track) => track.stop());
-          const blob = new Blob(recordedChunksRef.current, {
-            type: "video/webm",
-          });
+          // Stop all tracks from both streams.
+          combinedStream.getTracks().forEach((track) => track.stop());
+          const blob = new Blob(recordedChunksRef.current, { type: "video/webm" });
           recordedChunksRef.current = [];
           const url = URL.createObjectURL(blob);
           // Create a temporary link to download the recorded video.
@@ -109,6 +120,7 @@ export default function Whiteboard() {
           a.click();
           URL.revokeObjectURL(url);
         };
+  
         recorder.start();
         setMediaRecorder(recorder);
         setIsRecording(true);
