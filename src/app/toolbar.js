@@ -66,7 +66,7 @@ const Toolbar = ({
     <button
       onClick={toggleRecording}
       title={isRecording ? "Stop Recording" : "Start Recording"}
-      className={`px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none ${
+      className={`hidden md:inline-flex px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none ${
         isRecording ? "bg-red-600 text-white" : "bg-gray-200 text-white"
       }`}
     >
@@ -267,9 +267,7 @@ const Toolbar = ({
                     type="number"
                     min="1"
                     value={highlightWidth}
-                    onChange={(e) =>
-                      setHighlightWidth(Number(e.target.value))
-                    }
+                    onChange={(e) => setHighlightWidth(Number(e.target.value))}
                     className="w-16 border rounded px-1 py-0.5 text-black"
                   />
                 </div>

@@ -58,9 +58,7 @@ export default function Whiteboard() {
       prevBoards.map((board) => {
         if (board.id === activeBoardId) {
           const newElements =
-            typeof updater === "function"
-              ? updater(board.elements)
-              : updater;
+            typeof updater === "function" ? updater(board.elements) : updater;
           return { ...board, elements: newElements };
         }
         return board;
@@ -85,30 +83,32 @@ export default function Whiteboard() {
   const startRecording = () => {
     Promise.all([
       navigator.mediaDevices.getDisplayMedia({ video: true, audio: true }),
-      navigator.mediaDevices.getUserMedia({ audio: true })
+      navigator.mediaDevices.getUserMedia({ audio: true }),
     ])
       .then(([displayStream, micStream]) => {
         // Combine video track from display with all available audio tracks.
         const tracks = [
           ...displayStream.getVideoTracks(),
           ...displayStream.getAudioTracks(),
-          ...micStream.getAudioTracks()
+          ...micStream.getAudioTracks(),
         ];
         const combinedStream = new MediaStream(tracks);
-  
+
         const options = { mimeType: "video/webm" };
         const recorder = new MediaRecorder(combinedStream, options);
-  
+
         recorder.ondataavailable = (e) => {
           if (e.data.size > 0) {
             recordedChunksRef.current.push(e.data);
           }
         };
-  
+
         recorder.onstop = () => {
           // Stop all tracks from both streams.
           combinedStream.getTracks().forEach((track) => track.stop());
-          const blob = new Blob(recordedChunksRef.current, { type: "video/webm" });
+          const blob = new Blob(recordedChunksRef.current, {
+            type: "video/webm",
+          });
           recordedChunksRef.current = [];
           const url = URL.createObjectURL(blob);
           // Create a temporary link to download the recorded video.
@@ -120,7 +120,7 @@ export default function Whiteboard() {
           a.click();
           URL.revokeObjectURL(url);
         };
-  
+
         recorder.start();
         setMediaRecorder(recorder);
         setIsRecording(true);
@@ -239,7 +239,10 @@ export default function Whiteboard() {
           }
           return {
             ...el,
-            points: startPos.points.map(([px, py]) => [px + deltaX, py + deltaY]),
+            points: startPos.points.map(([px, py]) => [
+              px + deltaX,
+              py + deltaY,
+            ]),
           };
         })
       );
@@ -574,10 +577,15 @@ export default function Whiteboard() {
                         onMouseDown={(e) => {
                           e.stopPropagation();
                           setIsMoveIconDragging(true);
-                          dragStartPos.current = getSVGPoint(e.clientX, e.clientY);
+                          dragStartPos.current = getSVGPoint(
+                            e.clientX,
+                            e.clientY
+                          );
                           elementStartPositions.current = new Map(
                             Array.from(selectedElements).map((id) => {
-                              const el = activeBoard.elements.find((e) => e.id === id);
+                              const el = activeBoard.elements.find(
+                                (e) => e.id === id
+                              );
                               return [
                                 id,
                                 {
@@ -593,10 +601,15 @@ export default function Whiteboard() {
                           e.stopPropagation();
                           setIsMoveIconDragging(true);
                           const touch = e.touches[0];
-                          dragStartPos.current = getSVGPoint(touch.clientX, touch.clientY);
+                          dragStartPos.current = getSVGPoint(
+                            touch.clientX,
+                            touch.clientY
+                          );
                           elementStartPositions.current = new Map(
                             Array.from(selectedElements).map((id) => {
-                              const el = activeBoard.elements.find((e) => e.id === id);
+                              const el = activeBoard.elements.find(
+                                (e) => e.id === id
+                              );
                               return [
                                 id,
                                 {
@@ -644,10 +657,15 @@ export default function Whiteboard() {
                         onMouseDown={(e) => {
                           e.stopPropagation();
                           setIsMoveIconDragging(true);
-                          dragStartPos.current = getSVGPoint(e.clientX, e.clientY);
+                          dragStartPos.current = getSVGPoint(
+                            e.clientX,
+                            e.clientY
+                          );
                           elementStartPositions.current = new Map(
                             Array.from(selectedElements).map((id) => {
-                              const el = activeBoard.elements.find((e) => e.id === id);
+                              const el = activeBoard.elements.find(
+                                (e) => e.id === id
+                              );
                               return [
                                 id,
                                 {
@@ -663,10 +681,15 @@ export default function Whiteboard() {
                           e.stopPropagation();
                           setIsMoveIconDragging(true);
                           const touch = e.touches[0];
-                          dragStartPos.current = getSVGPoint(touch.clientX, touch.clientY);
+                          dragStartPos.current = getSVGPoint(
+                            touch.clientX,
+                            touch.clientY
+                          );
                           elementStartPositions.current = new Map(
                             Array.from(selectedElements).map((id) => {
-                              const el = activeBoard.elements.find((e) => e.id === id);
+                              const el = activeBoard.elements.find(
+                                (e) => e.id === id
+                              );
                               return [
                                 id,
                                 {
@@ -692,7 +715,7 @@ export default function Whiteboard() {
               stroke={currentPath.color}
               fill="none"
               strokeWidth={currentPath.strokeWidth}
-              opacity={currentPath.type === "highlight" ? 0.3 : 0.5}
+              opacity={currentPath.type === "highlight" ? 0.5 : 1}
             />
           )}
 
