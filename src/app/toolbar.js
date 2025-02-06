@@ -75,7 +75,7 @@ const Toolbar = ({
           <div className="flex flex-nowrap items-center gap-2 justify-center md:justify-end">
             <label
               title="Upload PDF"
-              className="cursor-pointer inline-flex items-center px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none bg-gray-200 text-gray-700 hover:bg-gray-300"
+              className="hidden md:inline-flex cursor-pointer items-center px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none bg-gray-200 text-gray-700 hover:bg-gray-300"
             >
               <LuUpload size={24} />
               <input
@@ -286,7 +286,7 @@ const Toolbar = ({
           <div className="flex flex-wrap items-center gap-2 justify-center md:justify-end">
             <label
               title="Upload PDF"
-              className="cursor-pointer inline-flex items-center px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none bg-gray-200 text-gray-700 hover:bg-gray-300"
+              className="hidden md:inline-flex cursor-pointer inline-flex items-center px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none bg-gray-200 text-gray-700 hover:bg-gray-300"
             >
               <LuUpload size={24} />
               <input
