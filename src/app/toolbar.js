@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+"use client";
+
+import { useState } from "react";
 import {
   LuPenTool,
   LuMousePointer,
@@ -12,7 +14,9 @@ import {
   LuHighlighter,
   LuCircle,
   LuSquare,
+  LuChevronDown,
 } from "react-icons/lu";
+import { motion } from "framer-motion";
 
 const Toolbar = ({
   activeBoard,
@@ -51,6 +55,7 @@ const Toolbar = ({
   stopRecording,
 }) => {
   const [isRecording, setIsRecording] = useState(false);
+  const [showToolOptions, setShowToolOptions] = useState(false);
 
   const toggleRecording = () => {
     if (isRecording) {
@@ -63,31 +68,54 @@ const Toolbar = ({
   };
 
   const RecordingButton = (
-    <button
+    <motion.button
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
       onClick={toggleRecording}
       title={isRecording ? "Stop Recording" : "Start Recording"}
-      className={`hidden md:inline-flex px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none ${
-        isRecording ? "bg-red-600 text-white" : "bg-gray-200 text-white"
+      className={`hidden md:inline-flex items-center justify-center w-8 h-8 rounded-full shadow transition ${
+        isRecording
+          ? "bg-red-600 text-white"
+          : darkMode
+          ? "bg-gray-700 text-gray-200 hover:bg-gray-600"
+          : "bg-white text-gray-700 hover:bg-gray-100"
       }`}
     >
-      {isRecording ? (
-        <LuSquare size={24} />
-      ) : (
-        <LuCircle size={24} color="red" />
-      )}
-    </button>
+      {isRecording ? <LuSquare size={16} /> : <LuCircle size={16} />}
+    </motion.button>
+  );
+
+  const ToolbarButton = ({ onClick, title, icon: Icon, isActive }) => (
+    <motion.button
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+      onClick={onClick}
+      title={title}
+      className={`flex items-center justify-center w-8 h-8 rounded-full shadow transition ${
+        isActive
+          ? "bg-blue-600 text-white"
+          : darkMode
+          ? "bg-gray-700 text-gray-200 hover:bg-gray-600"
+          : "bg-white text-gray-700 hover:bg-gray-100"
+      }`}
+    >
+      <Icon size={16} />
+    </motion.button>
   );
 
   return (
-    <div className="mb-2 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+    <div
+      className={`mb-2 py-2 px-4 ${
+        darkMode ? "bg-gray-800" : "bg-gray-50"
+      } rounded-lg shadow-md`}
+    >
       {activeBoard.pdfUrl ? (
-        <>
-          {/* PDF mode header */}
-          <div className="flex flex-row items-center gap-2 w-full">
-            <h1 className="text-2xl font-bold">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <h1 className="text-lg font-bold truncate max-w-[150px] md:max-w-xs">
               {activeBoard.pdfUrl.split("/").pop()}
             </h1>
-            <button
+            <ToolbarButton
               onClick={() =>
                 setBoards((prevBoards) =>
                   prevBoards.map((board) =>
@@ -98,18 +126,20 @@ const Toolbar = ({
                 )
               }
               title="Exit Upload"
-              className="px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none bg-gray-200 text-gray-700 hover:bg-gray-300"
-            >
-              <LuX size={24} />
-            </button>
+              icon={LuX}
+              isActive={false}
+            />
           </div>
-          {/* Level 3 buttons */}
-          <div className="flex flex-nowrap items-center gap-2 justify-center md:justify-end">
+          <div className="flex items-center gap-2">
             <label
               title="Upload PDF"
-              className="hidden md:inline-flex cursor-pointer items-center px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none bg-gray-200 text-gray-700 hover:bg-gray-300"
+              className={`hidden md:inline-flex cursor-pointer items-center justify-center w-8 h-8 rounded-full shadow transition ${
+                darkMode
+                  ? "bg-gray-700 text-gray-200 hover:bg-gray-600"
+                  : "bg-white text-gray-700 hover:bg-gray-100"
+              }`}
             >
-              <LuUpload size={24} />
+              <LuUpload size={16} />
               <input
                 type="file"
                 accept="application/pdf"
@@ -127,7 +157,11 @@ const Toolbar = ({
                   setSelectedElements(new Set());
                 }
               }}
-              className="px-3 py-1 rounded shadow focus:outline-none bg-gray-200 text-gray-700 hover:bg-gray-300"
+              className={`px-2 py-1 text-sm rounded-full shadow focus:outline-none ${
+                darkMode
+                  ? "bg-gray-700 text-gray-200 hover:bg-gray-600"
+                  : "bg-white text-gray-700 hover:bg-gray-100"
+              }`}
             >
               {boards.map((board) => (
                 <option key={board.id} value={board.id}>
@@ -136,186 +170,88 @@ const Toolbar = ({
               ))}
               <option value="add">+ Add Board</option>
             </select>
-            <button
+            <ToolbarButton
               onClick={() => deleteBoard(activeBoardId)}
               title="Delete Board"
-              className="px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none bg-red-600 text-white"
-            >
-              <LuTrash size={24} />
-            </button>
-            <button
+              icon={LuTrash}
+              isActive={false}
+            />
+            <ToolbarButton
               onClick={() => setDarkMode((prev) => !prev)}
               title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
-              className="px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none bg-gray-200"
-            >
-              {darkMode ? (
-                <LuSun size={24} color="#FDB813" />
-              ) : (
-                <LuMoon size={24} />
-              )}
-            </button>
+              icon={darkMode ? LuSun : LuMoon}
+              isActive={false}
+            />
             {RecordingButton}
           </div>
-        </>
+        </div>
       ) : (
-        <>
-          {/* Level 1: Mode and tool selection */}
-          <div className="flex flex-wrap items-center gap-2 justify-center md:justify-start">
-            <button
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <ToolbarButton
               onClick={switchToWriteMode}
               title="Write"
-              className={`px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none ${
-                mode === "write"
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-              }`}
-            >
-              <LuPenTool size={24} />
-            </button>
-            <button
+              icon={LuPenTool}
+              isActive={mode === "write"}
+            />
+            <ToolbarButton
               onClick={() => setMode("select")}
               title="Select"
-              className={`px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none ${
-                mode === "select"
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-              }`}
-            >
-              <LuMousePointer size={24} />
-            </button>
+              icon={LuMousePointer}
+              isActive={mode === "select"}
+            />
             {mode === "select" && selectedElements.size > 0 && (
-              <button
+              <ToolbarButton
                 onClick={deleteElement}
                 title="Delete"
-                className="px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none bg-red-600 text-white"
-              >
-                <LuX size={24} />
-              </button>
+                icon={LuX}
+                isActive={false}
+              />
             )}
             {mode === "write" && (
               <>
-                <button
-                  onClick={() => setTool("pen")}
-                  title="Pen"
-                  className={`px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none ${
-                    tool === "pen"
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                  }`}
-                >
-                  <LuBrush size={24} />
-                </button>
-                <button
-                  onClick={() => setTool("highlight")}
-                  title="Highlight"
-                  className={`px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none ${
-                    tool === "highlight"
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                  }`}
-                >
-                  <LuHighlighter size={24} />
-                </button>
-                <button
-                  onClick={() => setTool("text")}
-                  title="Text"
-                  className={`px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none ${
-                    tool === "text"
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                  }`}
-                >
-                  <LuType size={24} />
-                </button>
+                {/* Desktop: show tool buttons in the toolbar */}
+                <div className="hidden md:flex items-center gap-2">
+                  <ToolbarButton
+                    onClick={() => setTool("pen")}
+                    title="Pen"
+                    icon={LuBrush}
+                    isActive={tool === "pen"}
+                  />
+                  <ToolbarButton
+                    onClick={() => setTool("highlight")}
+                    title="Highlight"
+                    icon={LuHighlighter}
+                    isActive={tool === "highlight"}
+                  />
+                  <ToolbarButton
+                    onClick={() => setTool("text")}
+                    title="Text"
+                    icon={LuType}
+                    isActive={tool === "text"}
+                  />
+                </div>
+                {/* Always show tool options toggle */}
+                <ToolbarButton
+                  onClick={() => setShowToolOptions(!showToolOptions)}
+                  title="Tool Options"
+                  icon={LuChevronDown}
+                  isActive={showToolOptions}
+                />
               </>
             )}
           </div>
 
-          {/* Level 2: Tool-specific options */}
-          {mode === "write" && (
-            <div className="flex flex-wrap items-center gap-2 justify-center">
-              {tool === "pen" && (
-                <div className="flex flex-wrap items-center gap-2">
-                  <label className="whitespace-nowrap">Pen Color:</label>
-                  <input
-                    type="color"
-                    value={penColor}
-                    onChange={(e) => setPenColor(e.target.value)}
-                    className="w-8 h-8 border-none bg-transparent"
-                  />
-                  <label className="whitespace-nowrap">Pen Width:</label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={penWidth}
-                    onChange={(e) => setPenWidth(Number(e.target.value))}
-                    className="w-16 border rounded px-1 py-0.5 text-black"
-                  />
-                </div>
-              )}
-              {tool === "highlight" && (
-                <div className="flex flex-wrap items-center gap-2">
-                  <label className="whitespace-nowrap">Highlight Color:</label>
-                  <input
-                    type="color"
-                    value={highlightColor}
-                    onChange={(e) => setHighlightColor(e.target.value)}
-                    className="w-8 h-8 border-none bg-transparent"
-                  />
-                  <label className="whitespace-nowrap">Highlight Width:</label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={highlightWidth}
-                    onChange={(e) => setHighlightWidth(Number(e.target.value))}
-                    className="w-16 border rounded px-1 py-0.5 text-black"
-                  />
-                </div>
-              )}
-              {tool === "text" && (
-                <div className="flex flex-wrap items-center gap-2">
-                  <label className="whitespace-nowrap">Text Color:</label>
-                  <input
-                    type="color"
-                    value={textColor}
-                    onChange={(e) => setTextColor(e.target.value)}
-                    className="w-8 h-8 border-none bg-transparent"
-                  />
-                  <label className="whitespace-nowrap">Font Size:</label>
-                  <input
-                    type="number"
-                    min="10"
-                    max="50"
-                    value={textFontSize}
-                    onChange={(e) => {
-                      const newSize = Number(e.target.value);
-                      setTextFontSize(newSize);
-                      if (textBox) {
-                        setTextBox((prev) =>
-                          prev
-                            ? {
-                                ...prev,
-                                fontSize: newSize,
-                                height: Math.max(40, newSize * 2),
-                              }
-                            : null
-                        );
-                      }
-                    }}
-                    className="w-16 border rounded px-1 py-0.5 text-black"
-                  />
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Level 3: Right-side controls */}
-          <div className="flex flex-wrap items-center gap-2 justify-center md:justify-end">
+          <div className="flex items-center gap-2">
             <label
               title="Upload PDF"
-              className="hidden md:inline-flex cursor-pointer items-center px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none bg-gray-200 text-gray-700 hover:bg-gray-300"
+              className={`hidden md:inline-flex cursor-pointer items-center justify-center w-8 h-8 rounded-full shadow transition ${
+                darkMode
+                  ? "bg-gray-700 text-gray-200 hover:bg-gray-600"
+                  : "bg-white text-gray-700 hover:bg-gray-100"
+              }`}
             >
-              <LuUpload size={24} />
+              <LuUpload size={16} />
               <input
                 type="file"
                 accept="application/pdf"
@@ -333,7 +269,11 @@ const Toolbar = ({
                   setSelectedElements(new Set());
                 }
               }}
-              className="px-3 py-1 rounded shadow focus:outline-none bg-gray-200 text-gray-700 hover:bg-gray-300"
+              className={`px-2 py-1 text-sm rounded-full shadow focus:outline-none ${
+                darkMode
+                  ? "bg-gray-700 text-gray-200 hover:bg-gray-600"
+                  : "bg-white text-gray-700 hover:bg-gray-100"
+              }`}
             >
               {boards.map((board) => (
                 <option key={board.id} value={board.id}>
@@ -342,27 +282,151 @@ const Toolbar = ({
               ))}
               <option value="add">+ Add Board</option>
             </select>
-            <button
+            <ToolbarButton
               onClick={() => deleteBoard(activeBoardId)}
               title="Delete Board"
-              className="px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none bg-red-600 text-white"
-            >
-              <LuTrash size={24} />
-            </button>
-            <button
+              icon={LuTrash}
+              isActive={false}
+            />
+            <ToolbarButton
               onClick={() => setDarkMode((prev) => !prev)}
               title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
-              className="px-3 py-1 rounded shadow transition transform hover:scale-105 focus:outline-none bg-gray-200"
-            >
-              {darkMode ? (
-                <LuSun size={24} color="#FDB813" />
-              ) : (
-                <LuMoon size={24} />
-              )}
-            </button>
+              icon={darkMode ? LuSun : LuMoon}
+              isActive={false}
+            />
             {RecordingButton}
           </div>
-        </>
+        </div>
+      )}
+
+      {mode === "write" && showToolOptions && (
+        <div
+          className={`mt-2 flex flex-wrap items-center gap-4 justify-start ${
+            darkMode ? "bg-gray-700" : "bg-white"
+          } p-2 rounded-lg shadow`}
+        >
+          {/* Mobile: show tool buttons inside tool options */}
+          <div className="flex md:hidden items-center gap-2">
+            <ToolbarButton
+              onClick={() => setTool("pen")}
+              title="Pen"
+              icon={LuBrush}
+              isActive={tool === "pen"}
+            />
+            <ToolbarButton
+              onClick={() => setTool("highlight")}
+              title="Highlight"
+              icon={LuHighlighter}
+              isActive={tool === "highlight"}
+            />
+            <ToolbarButton
+              onClick={() => setTool("text")}
+              title="Text"
+              icon={LuType}
+              isActive={tool === "text"}
+            />
+          </div>
+          {tool === "pen" && (
+            <div className="flex items-center gap-2">
+              <label
+                className={`text-xs font-medium ${
+                  darkMode ? "text-gray-200" : "text-gray-700"
+                }`}
+              >
+                Color:
+              </label>
+              <input
+                type="color"
+                value={penColor}
+                onChange={(e) => setPenColor(e.target.value)}
+                className="w-6 h-6 border-none bg-transparent rounded-full"
+              />
+              <label
+                className={`text-xs font-medium ${
+                  darkMode ? "text-gray-200" : "text-gray-700"
+                }`}
+              >
+                Width:
+              </label>
+              <input
+                type="number"
+                min="1"
+                value={penWidth}
+                onChange={(e) => setPenWidth(Number(e.target.value))}
+                className="w-12 text-xs border rounded-full px-1 py-0.5 text-black"
+              />
+            </div>
+          )}
+          {tool === "highlight" && (
+            <div className="flex items-center gap-2">
+              <label
+                className={`text-xs font-medium ${
+                  darkMode ? "text-gray-200" : "text-gray-700"
+                }`}
+              >
+                Color:
+              </label>
+              <input
+                type="color"
+                value={highlightColor}
+                onChange={(e) => setHighlightColor(e.target.value)}
+                className="w-6 h-6 border-none bg-transparent rounded-full"
+              />
+              <label
+                className={`text-xs font-medium ${
+                  darkMode ? "text-gray-200" : "text-gray-700"
+                }`}
+              >
+                Width:
+              </label>
+              <input
+                type="number"
+                min="1"
+                value={highlightWidth}
+                onChange={(e) => setHighlightWidth(Number(e.target.value))}
+                className="w-12 text-xs border rounded-full px-1 py-0.5 text-black"
+              />
+            </div>
+          )}
+          {tool === "text" && (
+            <div className="flex items-center gap-2">
+              <label className="text-xs font-medium text-gray-700 dark:text-gray-200">
+                Color:
+              </label>
+              <input
+                type="color"
+                value={textColor}
+                onChange={(e) => setTextColor(e.target.value)}
+                className="w-6 h-6 border-none bg-transparent rounded-full"
+              />
+              <label className="text-xs font-medium text-gray-700 dark:text-gray-200">
+                Size:
+              </label>
+              <input
+                type="number"
+                min="10"
+                max="50"
+                value={textFontSize}
+                onChange={(e) => {
+                  const newSize = Number(e.target.value);
+                  setTextFontSize(newSize);
+                  if (textBox) {
+                    setTextBox((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            fontSize: newSize,
+                            height: Math.max(40, newSize * 2),
+                          }
+                        : null
+                    );
+                  }
+                }}
+                className="w-12 text-xs border rounded-full px-1 py-0.5 text-black"
+              />
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
