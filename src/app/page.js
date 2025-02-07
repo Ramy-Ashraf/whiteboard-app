@@ -26,7 +26,7 @@ export default function Whiteboard() {
   const [penColor, setPenColor] = useState("#000000");
   const [highlightColor, setHighlightColor] = useState("#FFFF00");
   const [textColor, setTextColor] = useState("#000000");
-  const [penWidth, setPenWidth] = useState(2);
+  const [penWidth, setPenWidth] = useState(6);
   const [highlightWidth, setHighlightWidth] = useState(40);
   const [selectedElements, setSelectedElements] = useState(new Set());
   const [drawing, setDrawing] = useState(false);
@@ -36,7 +36,7 @@ export default function Whiteboard() {
   const [selectionRect, setSelectionRect] = useState(null);
   const [isMoveIconDragging, setIsMoveIconDragging] = useState(false);
   const [isResizingTextBox, setIsResizingTextBox] = useState(false);
-  const [textFontSize, setTextFontSize] = useState(20);
+  const [textFontSize, setTextFontSize] = useState(25);
 
   const svgRef = useRef(null);
   const textInputRef = useRef(null);
