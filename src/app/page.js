@@ -374,7 +374,7 @@ export default function Whiteboard() {
   };
 
   const handleResizeStart = (e) => {
-    e.stopPropagation();
+    if (typeof e.stopPropagation === "function") e.stopPropagation();
     const svgPoint = getSVGPoint(e.clientX, e.clientY);
     setIsResizingElement(true);
     resizeStartPos.current = svgPoint;
@@ -715,6 +715,8 @@ export default function Whiteboard() {
                       cursor="nwse-resize"
                       onMouseDown={(e) => handleResizeStart(e, element)}
                       onTouchStart={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
                         const touch = e.touches[0];
                         handleResizeStart(
                           {
@@ -794,8 +796,6 @@ export default function Whiteboard() {
                             ];
                           })
                         );
-                      }}
-                    />
                     <circle
                       cx={element.x + (element.width || 100) + 10}
                       cy={element.y + (element.fontSize || 20) + 10}
@@ -804,6 +804,8 @@ export default function Whiteboard() {
                       cursor="nwse-resize"
                       onMouseDown={(e) => handleResizeStart(e, element)}
                       onTouchStart={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
                         const touch = e.touches[0];
                         handleResizeStart(
                           {
@@ -813,6 +815,8 @@ export default function Whiteboard() {
                           },
                           element
                         );
+                      }}
+                    />
                       }}
                     />
                   </g>
