@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import {LuMove, LuMoveDiagonal2} from "react-icons/lu";
 import Toolbar from "./toolbar";
 
 export default function Whiteboard() {
@@ -635,7 +636,6 @@ export default function Whiteboard() {
           {activeBoard.elements
             .filter((element) => selectedElements.has(element.id))
             .map((element) => {
-              // For pen and highlight elements, compute bounding box based on points.
               if (element.type === "pen" || element.type === "highlight") {
                 const minX = Math.min(...element.points.map((p) => p[0]));
                 const minY = Math.min(...element.points.map((p) => p[1]));
@@ -653,19 +653,14 @@ export default function Whiteboard() {
                       strokeWidth="1"
                       strokeDasharray="4 2"
                     />
-                    <circle
-                      cx={maxX + 10}
-                      cy={minY - 10}
-                      r="5"
-                      fill="#0070f3"
-                      cursor="move"
+                    {/* Move icon */}
+                    <g
+                      transform={`translate(${maxX + 10}, ${minY - 10})`}
+                      style={{ cursor: "move" }}
                       onMouseDown={(e) => {
                         e.stopPropagation();
                         setIsMoveIconDragging(true);
-                        dragStartPos.current = getSVGPoint(
-                          e.clientX,
-                          e.clientY
-                        );
+                        dragStartPos.current = getSVGPoint(e.clientX, e.clientY);
                         elementStartPositions.current = new Map(
                           Array.from(selectedElements).map((id) => {
                             const el = activeBoard.elements.find(
@@ -706,13 +701,23 @@ export default function Whiteboard() {
                           })
                         );
                       }}
-                    />
-                    <circle
-                      cx={maxX + 10}
-                      cy={maxY + 10}
-                      r="5"
-                      fill="#8fce00"
-                      cursor="nwse-resize"
+                    >
+                      <circle
+                        cx={0}
+                        cy={0}
+                        r="12"
+                        fill="white"
+                        stroke="#0070f3"
+                        strokeWidth="2"
+                      />
+                      <g transform="translate(-10, -10)">
+                        <LuMove color="#0070f3" size={20} />
+                      </g>
+                    </g>
+                    {/* Resize icon */}
+                    <g
+                      transform={`translate(${maxX + 10}, ${maxY + 10})`}
+                      style={{ cursor: "nwse-resize" }}
                       onMouseDown={(e) => handleResizeStart(e, element)}
                       onTouchStart={(e) => {
                         e.preventDefault();
@@ -727,11 +732,23 @@ export default function Whiteboard() {
                           element
                         );
                       }}
-                    />
+                    >
+                      <circle
+                        cx={0}
+                        cy={0}
+                        r="12"
+                        fill="white"
+                        stroke="#0070f3"
+                        strokeWidth="2"
+                      />
+                      <g transform="translate(-10, -10)">
+                        <LuMoveDiagonal2 color="#0070f3" size={20} />
+                      </g>
+                    </g>
                   </g>
                 );
               } else {
-                // For text elements, use x, y and width/fontSize.
+                // For text elements
                 return (
                   <g key={`${element.id}-overlay`}>
                     <rect
@@ -744,19 +761,16 @@ export default function Whiteboard() {
                       strokeWidth="1"
                       strokeDasharray="4 2"
                     />
-                    <circle
-                      cx={element.x + (element.width || 100) + 10}
-                      cy={element.y - 10}
-                      r="5"
-                      fill="#0070f3"
-                      cursor="move"
+                    {/* Move icon */}
+                    <g
+                      transform={`translate(${
+                        element.x + (element.width || 100) + 10
+                      }, ${element.y - 10})`}
+                      style={{ cursor: "move" }}
                       onMouseDown={(e) => {
                         e.stopPropagation();
                         setIsMoveIconDragging(true);
-                        dragStartPos.current = getSVGPoint(
-                          e.clientX,
-                          e.clientY
-                        );
+                        dragStartPos.current = getSVGPoint(e.clientX, e.clientY);
                         elementStartPositions.current = new Map(
                           Array.from(selectedElements).map((id) => {
                             const el = activeBoard.elements.find(
@@ -796,12 +810,26 @@ export default function Whiteboard() {
                             ];
                           })
                         );
-                    <circle
-                      cx={element.x + (element.width || 100) + 10}
-                      cy={element.y + (element.fontSize || 20) + 10}
-                      r="5"
-                      fill="#8fce00"
-                      cursor="nwse-resize"
+                      }}
+                    >
+                      <circle
+                        cx={0}
+                        cy={0}
+                        r="12"
+                        fill="white"
+                        stroke="#0070f3"
+                        strokeWidth="2"
+                      />
+                      <g transform="translate(-10, -10)">
+                        <LuMove color="#0070f3" size={20} />
+                      </g>
+                    </g>
+                    {/* Resize icon */}
+                    <g
+                      transform={`translate(${
+                        element.x + (element.width || 100) + 10
+                      }, ${element.y + (element.fontSize || 20) + 10})`}
+                      style={{ cursor: "nwse-resize" }}
                       onMouseDown={(e) => handleResizeStart(e, element)}
                       onTouchStart={(e) => {
                         e.preventDefault();
@@ -816,9 +844,19 @@ export default function Whiteboard() {
                           element
                         );
                       }}
-                    />
-                      }}
-                    />
+                    >
+                      <circle
+                        cx={0}
+                        cy={0}
+                        r="12"
+                        fill="white"
+                        stroke="#0070f3"
+                        strokeWidth="2"
+                      />
+                      <g transform="translate(-10, -10)">
+                        <LuMoveDiagonal2 color="#0070f3" size={20} />
+                      </g>
+                    </g>
                   </g>
                 );
               }
@@ -827,7 +865,9 @@ export default function Whiteboard() {
           {/* Draw current drawing path (during live drawing) */}
           {currentPath && (
             <path
-              d={`M ${currentPath.points.map((p) => p.join(" ")).join(" L ")}`}
+              d={`M ${currentPath.points
+                .map((p) => p.join(" "))
+                .join(" L ")}`}
               stroke={currentPath.color}
               fill="none"
               strokeWidth={currentPath.strokeWidth}
