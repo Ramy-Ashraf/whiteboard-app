@@ -373,7 +373,7 @@ export default function Whiteboard() {
     }
   };
 
-  const handleResizeStart = (e, element) => {
+  const handleResizeStart = (e) => {
     e.stopPropagation();
     const svgPoint = getSVGPoint(e.clientX, e.clientY);
     setIsResizingElement(true);
