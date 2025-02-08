@@ -254,7 +254,12 @@ export default function Whiteboard() {
           const startData = elementStartPositions.current.get(el.id);
           if (!startData) return el;
 
-          const { originalBoundingBox, originalPoints, originalFontSize, originalWidth } = startData;
+          const {
+            originalBoundingBox,
+            originalPoints,
+            originalFontSize,
+            originalWidth,
+          } = startData;
           const { minX, minY, maxX, maxY } = originalBoundingBox;
           const originalWidthBB = maxX - minX;
           const originalHeightBB = maxY - minY;
@@ -569,7 +574,10 @@ export default function Whiteboard() {
         stopRecording={stopRecording}
       />
 
-      <div className="flex-grow relative overflow-auto" style={{ touchAction: "none" }}>
+      <div
+        className="flex-grow relative overflow-auto"
+        style={{ touchAction: "none" }}
+      >
         {activeBoard.pdfUrl && (
           <iframe
             src={activeBoard.pdfUrl}
@@ -595,208 +603,229 @@ export default function Whiteboard() {
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
+          {/* Draw base elements without overlays */}
           {activeBoard.elements.map((element) => (
             <g key={element.id}>
               {element.type === "pen" || element.type === "highlight" ? (
-                <>
-                  <path
-                    d={`M ${element.points
-                      .map((p) => p.join(" "))
-                      .join(" L ")}`}
-                    stroke={element.color}
-                    fill="none"
-                    strokeWidth={element.strokeWidth}
-                    opacity={element.type === "highlight" ? 0.5 : 1}
-                    pointerEvents="visibleStroke"
-                  />
-                  {selectedElements.has(element.id) && (
-                    <>
-                      <rect
-                        x={Math.min(...element.points.map((p) => p[0])) - 5}
-                        y={Math.min(...element.points.map((p) => p[1])) - 5}
-                        width={
-                          Math.max(...element.points.map((p) => p[0])) -
-                          Math.min(...element.points.map((p) => p[0])) +
-                          10
-                        }
-                        height={
-                          Math.max(...element.points.map((p) => p[1])) -
-                          Math.min(...element.points.map((p) => p[1])) +
-                          10
-                        }
-                        fill="none"
-                        stroke="#0070f3"
-                        strokeWidth="1"
-                        strokeDasharray="4 2"
-                      />
-                      <circle
-                        cx={Math.max(...element.points.map((p) => p[0])) + 10}
-                        cy={Math.min(...element.points.map((p) => p[1])) - 10}
-                        r="5"
-                        fill="#0070f3"
-                        cursor="move"
-                        onMouseDown={(e) => {
-                          e.stopPropagation();
-                          setIsMoveIconDragging(true);
-                          dragStartPos.current = getSVGPoint(
-                            e.clientX,
-                            e.clientY
-                          );
-                          elementStartPositions.current = new Map(
-                            Array.from(selectedElements).map((id) => {
-                              const el = activeBoard.elements.find(
-                                (e) => e.id === id
-                              );
-                              return [
-                                id,
-                                {
-                                  x: el.x || el.points[0][0],
-                                  y: el.y || el.points[0][1],
-                                  points: el.points?.map((p) => [...p]),
-                                },
-                              ];
-                            })
-                          );
-                        }}
-                        onTouchStart={(e) => {
-                          e.stopPropagation();
-                          setIsMoveIconDragging(true);
-                          const touch = e.touches[0];
-                          dragStartPos.current = getSVGPoint(
-                            touch.clientX,
-                            touch.clientY
-                          );
-                          elementStartPositions.current = new Map(
-                            Array.from(selectedElements).map((id) => {
-                              const el = activeBoard.elements.find(
-                                (e) => e.id === id
-                              );
-                              return [
-                                id,
-                                {
-                                  x: el.x || el.points[0][0],
-                                  y: el.y || el.points[0][1],
-                                  points: el.points?.map((p) => [...p]),
-                                },
-                              ];
-                            })
-                          );
-                        }}
-                      />
-                      <circle
-                        cx={Math.max(...element.points.map((p) => p[0])) + 10}
-                        cy={Math.max(...element.points.map((p) => p[1])) + 10}
-                        r="5"
-                        fill="#0070f3"
-                        cursor="nwse-resize"
-                        onMouseDown={(e) => handleResizeStart(e, element)}
-                        onTouchStart={(e) => {
-                          const touch = e.touches[0];
-                          handleResizeStart({ ...e, clientX: touch.clientX, clientY: touch.clientY }, element);
-                        }}
-                      />
-                    </>
-                  )}
-                </>
+                <path
+                  d={`M ${element.points
+                    .map((p) => p.join(" "))
+                    .join(" L ")}`}
+                  stroke={element.color}
+                  fill="none"
+                  strokeWidth={element.strokeWidth}
+                  opacity={element.type === "highlight" ? 0.5 : 1}
+                  pointerEvents="visibleStroke"
+                />
               ) : (
-                <>
-                  <text
-                    x={element.x}
-                    y={element.y + element.fontSize}
-                    fill={element.color}
-                    fontSize={element.fontSize}
-                    className="pointer-events-auto"
-                  >
-                    {element.content}
-                  </text>
-                  {selectedElements.has(element.id) && (
-                    <>
-                      <rect
-                        x={element.x - 5}
-                        y={element.y - 5}
-                        width={(element.width || 100) + 10}
-                        height={element.fontSize + 10}
-                        fill="none"
-                        stroke="#0070f3"
-                        strokeWidth="1"
-                        strokeDasharray="4 2"
-                      />
-                      <circle
-                        cx={element.x + (element.width || 100) + 10}
-                        cy={element.y - 10}
-                        r="5"
-                        fill="#0070f3"
-                        cursor="move"
-                        onMouseDown={(e) => {
-                          e.stopPropagation();
-                          setIsMoveIconDragging(true);
-                          dragStartPos.current = getSVGPoint(
-                            e.clientX,
-                            e.clientY
-                          );
-                          elementStartPositions.current = new Map(
-                            Array.from(selectedElements).map((id) => {
-                              const el = activeBoard.elements.find(
-                                (e) => e.id === id
-                              );
-                              return [
-                                id,
-                                {
-                                  x: el.x || el.points[0][0],
-                                  y: el.y || el.points[0][1],
-                                  points: el.points?.map((p) => [...p]),
-                                },
-                              ];
-                            })
-                          );
-                        }}
-                        onTouchStart={(e) => {
-                          e.stopPropagation();
-                          setIsMoveIconDragging(true);
-                          const touch = e.touches[0];
-                          dragStartPos.current = getSVGPoint(
-                            touch.clientX,
-                            touch.clientY
-                          );
-                          elementStartPositions.current = new Map(
-                            Array.from(selectedElements).map((id) => {
-                              const el = activeBoard.elements.find(
-                                (e) => e.id === id
-                              );
-                              return [
-                                id,
-                                {
-                                  x: el.x || el.points[0][0],
-                                  y: el.y || el.points[0][1],
-                                  points: el.points?.map((p) => [...p]),
-                                },
-                              ];
-                            })
-                          );
-                        }}
-                      />
-                      <circle
-                        cx={element.x + (element.width || 100) + 10}
-                        cy={element.y + (element.fontSize || 20) + 10}
-                        r="5"
-                        fill="#0070f3"
-                        cursor="nwse-resize"
-                        onMouseDown={(e) => handleResizeStart(e, element)}
-                        onTouchStart={(e) => {
-                          const touch = e.touches[0];
-                          handleResizeStart({ ...e, clientX: touch.clientX, clientY: touch.clientY }, element);
-                        }}
-                      />
-                    </>
-                  )}
-                </>
+                <text
+                  x={element.x}
+                  y={element.y + element.fontSize}
+                  fill={element.color}
+                  fontSize={element.fontSize}
+                  className="pointer-events-auto"
+                >
+                  {element.content}
+                </text>
               )}
             </g>
           ))}
 
+          {/* Draw selection overlays on top */}
+          {activeBoard.elements
+            .filter((element) => selectedElements.has(element.id))
+            .map((element) => {
+              // For pen and highlight elements, compute bounding box based on points.
+              if (element.type === "pen" || element.type === "highlight") {
+                const minX = Math.min(...element.points.map((p) => p[0]));
+                const minY = Math.min(...element.points.map((p) => p[1]));
+                const maxX = Math.max(...element.points.map((p) => p[0]));
+                const maxY = Math.max(...element.points.map((p) => p[1]));
+                return (
+                  <g key={`${element.id}-overlay`}>
+                    <rect
+                      x={minX - 5}
+                      y={minY - 5}
+                      width={maxX - minX + 10}
+                      height={maxY - minY + 10}
+                      fill="none"
+                      stroke="#0070f3"
+                      strokeWidth="1"
+                      strokeDasharray="4 2"
+                    />
+                    <circle
+                      cx={maxX + 10}
+                      cy={minY - 10}
+                      r="5"
+                      fill="#0070f3"
+                      cursor="move"
+                      onMouseDown={(e) => {
+                        e.stopPropagation();
+                        setIsMoveIconDragging(true);
+                        dragStartPos.current = getSVGPoint(
+                          e.clientX,
+                          e.clientY
+                        );
+                        elementStartPositions.current = new Map(
+                          Array.from(selectedElements).map((id) => {
+                            const el = activeBoard.elements.find(
+                              (e) => e.id === id
+                            );
+                            return [
+                              id,
+                              {
+                                x: el.x || el.points[0][0],
+                                y: el.y || el.points[0][1],
+                                points: el.points?.map((p) => [...p]),
+                              },
+                            ];
+                          })
+                        );
+                      }}
+                      onTouchStart={(e) => {
+                        e.stopPropagation();
+                        setIsMoveIconDragging(true);
+                        const touch = e.touches[0];
+                        dragStartPos.current = getSVGPoint(
+                          touch.clientX,
+                          touch.clientY
+                        );
+                        elementStartPositions.current = new Map(
+                          Array.from(selectedElements).map((id) => {
+                            const el = activeBoard.elements.find(
+                              (e) => e.id === id
+                            );
+                            return [
+                              id,
+                              {
+                                x: el.x || el.points[0][0],
+                                y: el.y || el.points[0][1],
+                                points: el.points?.map((p) => [...p]),
+                              },
+                            ];
+                          })
+                        );
+                      }}
+                    />
+                    <circle
+                      cx={maxX + 10}
+                      cy={maxY + 10}
+                      r="5"
+                      fill="#8fce00"
+                      cursor="nwse-resize"
+                      onMouseDown={(e) => handleResizeStart(e, element)}
+                      onTouchStart={(e) => {
+                        const touch = e.touches[0];
+                        handleResizeStart(
+                          {
+                            ...e,
+                            clientX: touch.clientX,
+                            clientY: touch.clientY,
+                          },
+                          element
+                        );
+                      }}
+                    />
+                  </g>
+                );
+              } else {
+                // For text elements, use x, y and width/fontSize.
+                return (
+                  <g key={`${element.id}-overlay`}>
+                    <rect
+                      x={element.x - 5}
+                      y={element.y - 5}
+                      width={(element.width || 100) + 10}
+                      height={(element.fontSize || 20) + 10}
+                      fill="none"
+                      stroke="#0070f3"
+                      strokeWidth="1"
+                      strokeDasharray="4 2"
+                    />
+                    <circle
+                      cx={element.x + (element.width || 100) + 10}
+                      cy={element.y - 10}
+                      r="5"
+                      fill="#0070f3"
+                      cursor="move"
+                      onMouseDown={(e) => {
+                        e.stopPropagation();
+                        setIsMoveIconDragging(true);
+                        dragStartPos.current = getSVGPoint(
+                          e.clientX,
+                          e.clientY
+                        );
+                        elementStartPositions.current = new Map(
+                          Array.from(selectedElements).map((id) => {
+                            const el = activeBoard.elements.find(
+                              (e) => e.id === id
+                            );
+                            return [
+                              id,
+                              {
+                                x: el.x || el.points[0][0],
+                                y: el.y || el.points[0][1],
+                                points: el.points?.map((p) => [...p]),
+                              },
+                            ];
+                          })
+                        );
+                      }}
+                      onTouchStart={(e) => {
+                        e.stopPropagation();
+                        setIsMoveIconDragging(true);
+                        const touch = e.touches[0];
+                        dragStartPos.current = getSVGPoint(
+                          touch.clientX,
+                          touch.clientY
+                        );
+                        elementStartPositions.current = new Map(
+                          Array.from(selectedElements).map((id) => {
+                            const el = activeBoard.elements.find(
+                              (e) => e.id === id
+                            );
+                            return [
+                              id,
+                              {
+                                x: el.x || el.points[0][0],
+                                y: el.y || el.points[0][1],
+                                points: el.points?.map((p) => [...p]),
+                              },
+                            ];
+                          })
+                        );
+                      }}
+                    />
+                    <circle
+                      cx={element.x + (element.width || 100) + 10}
+                      cy={element.y + (element.fontSize || 20) + 10}
+                      r="5"
+                      fill="#8fce00"
+                      cursor="nwse-resize"
+                      onMouseDown={(e) => handleResizeStart(e, element)}
+                      onTouchStart={(e) => {
+                        const touch = e.touches[0];
+                        handleResizeStart(
+                          {
+                            ...e,
+                            clientX: touch.clientX,
+                            clientY: touch.clientY,
+                          },
+                          element
+                        );
+                      }}
+                    />
+                  </g>
+                );
+              }
+            })}
+
+          {/* Draw current drawing path (during live drawing) */}
           {currentPath && (
             <path
-              d={`M ${currentPath.points.map((p) => p.join(" ")).join(" L ")}`}
+              d={`M ${currentPath.points
+                .map((p) => p.join(" "))
+                .join(" L ")}`}
               stroke={currentPath.color}
               fill="none"
               strokeWidth={currentPath.strokeWidth}
@@ -804,6 +833,7 @@ export default function Whiteboard() {
             />
           )}
 
+          {/* Draw selection rectangle */}
           {selectionRect && (
             <rect
               x={selectionRect.x1}
@@ -818,6 +848,7 @@ export default function Whiteboard() {
             />
           )}
 
+          {/* Render text input box */}
           {textBox && (
             <foreignObject
               x={textBox.x}
@@ -850,13 +881,18 @@ export default function Whiteboard() {
                       ? "bg-gray-700 text-white border-gray-500"
                       : "bg-white text-black border-blue-600"
                   }`}
-                  onKeyDown={(e) => e.key === "Enter" && e.target.blur()}
+                  onKeyDown={(e) =>
+                    e.key === "Enter" && e.target.blur()
+                  }
                 />
                 <div
                   onMouseDown={(e) => {
                     e.stopPropagation();
                     setIsResizingTextBox(true);
-                    resizeStartPos.current = getSVGPoint(e.clientX, e.clientY);
+                    resizeStartPos.current = getSVGPoint(
+                      e.clientX,
+                      e.clientY
+                    );
                   }}
                   onTouchStart={(e) => {
                     e.stopPropagation();
