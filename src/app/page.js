@@ -608,14 +608,14 @@ export default function Whiteboard() {
             <g key={element.id}>
               {element.type === "pen" || element.type === "highlight" ? (
                 <path
-                  d={`M ${element.points
-                    .map((p) => p.join(" "))
-                    .join(" L ")}`}
+                  d={`M ${element.points.map((p) => p.join(" ")).join(" L ")}`}
                   stroke={element.color}
                   fill="none"
                   strokeWidth={element.strokeWidth}
                   opacity={element.type === "highlight" ? 0.5 : 1}
                   pointerEvents="visibleStroke"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 />
               ) : (
                 <text
@@ -823,12 +823,12 @@ export default function Whiteboard() {
           {/* Draw current drawing path (during live drawing) */}
           {currentPath && (
             <path
-              d={`M ${currentPath.points
-                .map((p) => p.join(" "))
-                .join(" L ")}`}
+              d={`M ${currentPath.points.map((p) => p.join(" ")).join(" L ")}`}
               stroke={currentPath.color}
               fill="none"
               strokeWidth={currentPath.strokeWidth}
+              strokeLinecap="round"
+              strokeLinejoin="round"
               opacity={currentPath.type === "highlight" ? 0.5 : 1}
             />
           )}
@@ -881,18 +881,13 @@ export default function Whiteboard() {
                       ? "bg-gray-700 text-white border-gray-500"
                       : "bg-white text-black border-blue-600"
                   }`}
-                  onKeyDown={(e) =>
-                    e.key === "Enter" && e.target.blur()
-                  }
+                  onKeyDown={(e) => e.key === "Enter" && e.target.blur()}
                 />
                 <div
                   onMouseDown={(e) => {
                     e.stopPropagation();
                     setIsResizingTextBox(true);
-                    resizeStartPos.current = getSVGPoint(
-                      e.clientX,
-                      e.clientY
-                    );
+                    resizeStartPos.current = getSVGPoint(e.clientX, e.clientY);
                   }}
                   onTouchStart={(e) => {
                     e.stopPropagation();
