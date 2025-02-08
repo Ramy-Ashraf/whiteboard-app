@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Toolbar from "./toolbar";
 
 export default function Whiteboard() {
-  // Board management states…
+  // Board management states
   const [boards, setBoards] = useState([
     { id: 1, name: "Board 1", elements: [], pdfUrl: null },
     { id: 2, name: "Board 2", elements: [], pdfUrl: null },
@@ -19,7 +19,7 @@ export default function Whiteboard() {
   const [mediaRecorder, setMediaRecorder] = useState(null);
   const recordedChunksRef = useRef([]);
 
-  // Other whiteboard states…
+  // Whiteboard states
   const [darkMode, setDarkMode] = useState(true);
   const [mode, setMode] = useState("write");
   const [tool, setTool] = useState("pen");
@@ -36,6 +36,7 @@ export default function Whiteboard() {
   const [selectionRect, setSelectionRect] = useState(null);
   const [isMoveIconDragging, setIsMoveIconDragging] = useState(false);
   const [isResizingTextBox, setIsResizingTextBox] = useState(false);
+  const [isResizingElement, setIsResizingElement] = useState(false);
   const [textFontSize, setTextFontSize] = useState(25);
 
   const svgRef = useRef(null);
@@ -52,7 +53,6 @@ export default function Whiteboard() {
     };
   };
 
-  // Update only active board's elements.
   const setActiveBoardElements = (updater) => {
     setBoards((prevBoards) =>
       prevBoards.map((board) => {
@@ -79,14 +79,13 @@ export default function Whiteboard() {
     }
   };
 
-  // Recording functions using getDisplayMedia and MediaRecorder
+  // Recording functions
   const startRecording = () => {
     Promise.all([
       navigator.mediaDevices.getDisplayMedia({ video: true, audio: true }),
       navigator.mediaDevices.getUserMedia({ audio: true }),
     ])
       .then(([displayStream, micStream]) => {
-        // Combine video track from display with all available audio tracks.
         const tracks = [
           ...displayStream.getVideoTracks(),
           ...displayStream.getAudioTracks(),
@@ -98,20 +97,16 @@ export default function Whiteboard() {
         const recorder = new MediaRecorder(combinedStream, options);
 
         recorder.ondataavailable = (e) => {
-          if (e.data.size > 0) {
-            recordedChunksRef.current.push(e.data);
-          }
+          if (e.data.size > 0) recordedChunksRef.current.push(e.data);
         };
 
         recorder.onstop = () => {
-          // Stop all tracks from both streams.
           combinedStream.getTracks().forEach((track) => track.stop());
           const blob = new Blob(recordedChunksRef.current, {
             type: "video/webm",
           });
           recordedChunksRef.current = [];
           const url = URL.createObjectURL(blob);
-          // Create a temporary link to download the recorded video.
           const a = document.createElement("a");
           a.style.display = "none";
           a.href = url;
@@ -135,7 +130,7 @@ export default function Whiteboard() {
     }
   };
 
-  // Mouse and touch event handlers …
+  // Event handlers
   const handleMouseDown = (e) => {
     const svgPoint = getSVGPoint(e.clientX, e.clientY);
     if (mode === "write") {
@@ -249,7 +244,44 @@ export default function Whiteboard() {
       return;
     }
 
-    if (isResizingTextBox && textBox) {
+    if (isResizingElement) {
+      const deltaX = svgPoint.x - resizeStartPos.current.x;
+      const deltaY = svgPoint.y - resizeStartPos.current.y;
+
+      setActiveBoardElements((prev) =>
+        prev.map((el) => {
+          if (!selectedElements.has(el.id)) return el;
+          const startData = elementStartPositions.current.get(el.id);
+          if (!startData) return el;
+
+          const { originalBoundingBox, originalPoints, originalFontSize, originalWidth } = startData;
+          const { minX, minY, maxX, maxY } = originalBoundingBox;
+          const originalWidthBB = maxX - minX;
+          const originalHeightBB = maxY - minY;
+
+          if (originalWidthBB === 0 || originalHeightBB === 0) return el;
+
+          const newWidthBB = originalWidthBB + deltaX;
+          const newHeightBB = originalHeightBB + deltaY;
+          const scaleX = newWidthBB / originalWidthBB;
+          const scaleY = newHeightBB / originalHeightBB;
+
+          if (el.type === "pen" || el.type === "highlight") {
+            const newPoints = originalPoints.map(([x, y]) => [
+              minX + (x - minX) * scaleX,
+              minY + (y - minY) * scaleY,
+            ]);
+            return { ...el, points: newPoints };
+          } else if (el.type === "text") {
+            const newFontSize = originalFontSize * scaleY;
+            const newWidth = originalWidth * scaleX;
+            return { ...el, fontSize: newFontSize, width: newWidth };
+          }
+
+          return el;
+        })
+      );
+    } else if (isResizingTextBox && textBox) {
       const deltaX = svgPoint.x - resizeStartPos.current.x;
       const deltaY = svgPoint.y - resizeStartPos.current.y;
       setTextBox((prev) => ({
@@ -302,6 +334,7 @@ export default function Whiteboard() {
     setDrawing(false);
     setIsMoveIconDragging(false);
     setIsResizingTextBox(false);
+    setIsResizingElement(false);
 
     if (currentPath) {
       setActiveBoardElements((prev) => [...prev, currentPath]);
@@ -333,6 +366,41 @@ export default function Whiteboard() {
 
       setSelectionRect(null);
     }
+  };
+
+  const handleResizeStart = (e, element) => {
+    e.stopPropagation();
+    const svgPoint = getSVGPoint(e.clientX, e.clientY);
+    setIsResizingElement(true);
+    resizeStartPos.current = svgPoint;
+
+    const elementsData = new Map();
+    Array.from(selectedElements).forEach((id) => {
+      const el = activeBoard.elements.find((el) => el.id === id);
+      if (!el) return;
+
+      let minX, minY, maxX, maxY;
+      if (el.type === "text") {
+        minX = el.x;
+        minY = el.y;
+        maxX = el.x + (el.width || 100);
+        maxY = el.y + (el.fontSize || 20);
+      } else {
+        minX = Math.min(...el.points.map((p) => p[0]));
+        minY = Math.min(...el.points.map((p) => p[1]));
+        maxX = Math.max(...el.points.map((p) => p[0]));
+        maxY = Math.max(...el.points.map((p) => p[1]));
+      }
+
+      elementsData.set(el.id, {
+        originalPoints: el.points?.map((p) => [...p]),
+        originalBoundingBox: { minX, minY, maxX, maxY },
+        originalFontSize: el.fontSize,
+        originalWidth: el.width,
+      });
+    });
+
+    elementStartPositions.current = elementsData;
   };
 
   const handleTouchStart = (e) => {
@@ -412,7 +480,6 @@ export default function Whiteboard() {
     setSelectedElements(new Set());
   };
 
-  // Helper: create a new board
   const addBoard = () => {
     const newBoard = {
       id: Date.now(),
@@ -423,7 +490,6 @@ export default function Whiteboard() {
     setActiveBoardId(newBoard.id);
   };
 
-  // Helper: delete a board by its id
   const deleteBoard = (boardId) => {
     setBoards((prevBoards) => {
       if (prevBoards.length === 1) return prevBoards;
@@ -439,7 +505,6 @@ export default function Whiteboard() {
     });
   };
 
-  // Focus on the textarea when textBox becomes active.
   useEffect(() => {
     if (textBox?.active && textInputRef.current) {
       textInputRef.current.focus();
@@ -504,11 +569,7 @@ export default function Whiteboard() {
         stopRecording={stopRecording}
       />
 
-      {/* Responsive whiteboard container */}
-      <div
-        className="flex-grow relative overflow-auto"
-        style={{ touchAction: "none" }}
-      >
+      <div className="flex-grow relative overflow-auto" style={{ touchAction: "none" }}>
         {activeBoard.pdfUrl && (
           <iframe
             src={activeBoard.pdfUrl}
@@ -622,6 +683,18 @@ export default function Whiteboard() {
                           );
                         }}
                       />
+                      <circle
+                        cx={Math.max(...element.points.map((p) => p[0])) + 10}
+                        cy={Math.max(...element.points.map((p) => p[1])) + 10}
+                        r="5"
+                        fill="#0070f3"
+                        cursor="nwse-resize"
+                        onMouseDown={(e) => handleResizeStart(e, element)}
+                        onTouchStart={(e) => {
+                          const touch = e.touches[0];
+                          handleResizeStart({ ...e, clientX: touch.clientX, clientY: touch.clientY }, element);
+                        }}
+                      />
                     </>
                   )}
                 </>
@@ -700,6 +773,18 @@ export default function Whiteboard() {
                               ];
                             })
                           );
+                        }}
+                      />
+                      <circle
+                        cx={element.x + (element.width || 100) + 10}
+                        cy={element.y + (element.fontSize || 20) + 10}
+                        r="5"
+                        fill="#0070f3"
+                        cursor="nwse-resize"
+                        onMouseDown={(e) => handleResizeStart(e, element)}
+                        onTouchStart={(e) => {
+                          const touch = e.touches[0];
+                          handleResizeStart({ ...e, clientX: touch.clientX, clientY: touch.clientY }, element);
                         }}
                       />
                     </>
