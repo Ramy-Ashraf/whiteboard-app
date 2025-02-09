@@ -29,9 +29,13 @@ export default function Whiteboard() {
   const [textColor, setTextColor] = useState("#000000");
   const [penWidth, setPenWidth] = useState(6);
   const [highlightWidth, setHighlightWidth] = useState(40);
+  // New states for line and arrow customization
+  const [lineColor, setLineColor] = useState("#000000");
+  const [lineWidth, setLineWidth] = useState(6);
   const [selectedElements, setSelectedElements] = useState(new Set());
   const [drawing, setDrawing] = useState(false);
   const [currentPath, setCurrentPath] = useState(null);
+  const [currentShape, setCurrentShape] = useState(null);
   const [textBox, setTextBox] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [selectionRect, setSelectionRect] = useState(null);
@@ -159,6 +163,16 @@ export default function Whiteboard() {
           fontSize: textFontSize,
         });
         setIsDragging(true);
+      } else if (tool === "line" || tool === "arrow") {
+        setCurrentShape({
+          type: tool,
+          start: svgPoint,
+          end: svgPoint,
+          color: lineColor,
+          strokeWidth: lineWidth,
+          id: Date.now(),
+        });
+        setDrawing(true);
       }
     } else if (mode === "select") {
       dragStartPos.current = svgPoint;
@@ -198,12 +212,18 @@ export default function Whiteboard() {
         elementStartPositions.current = new Map(
           Array.from(newSelection).map((id) => {
             const el = activeBoard.elements.find((e) => e.id === id);
+            if (el.type === "text") {
+              return [id, { x: el.x, y: el.y }];
+            } else if (el.type === "line" || el.type === "arrow") {
+              return [
+                id,
+                { x1: el.x1, y1: el.y1, x2: el.x2, y2: el.y2 },
+              ];
+            }
             return [
               id,
               {
-                x: el.x || el.points[0][0],
-                y: el.y || el.points[0][1],
-                points: el.points?.map((p) => [...p]),
+                points: el.points.map((p) => [...p]),
               },
             ];
           })
@@ -232,6 +252,14 @@ export default function Whiteboard() {
 
           if (el.type === "text") {
             return { ...el, x: startPos.x + deltaX, y: startPos.y + deltaY };
+          } else if (el.type === "line" || el.type === "arrow") {
+            return {
+              ...el,
+              x1: startPos.x1 + deltaX,
+              y1: startPos.y1 + deltaY,
+              x2: startPos.x2 + deltaX,
+              y2: startPos.y2 + deltaY,
+            };
           }
           return {
             ...el,
@@ -282,6 +310,12 @@ export default function Whiteboard() {
             const newFontSize = originalFontSize * scaleY;
             const newWidth = originalWidth * scaleX;
             return { ...el, fontSize: newFontSize, width: newWidth };
+          } else if (el.type === "line" || el.type === "arrow") {
+            const newX1 = minX + (startData.x1 - minX) * scaleX;
+            const newY1 = minY + (startData.y1 - minY) * scaleY;
+            const newX2 = minX + (startData.x2 - minX) * scaleX;
+            const newY2 = minY + (startData.y2 - minY) * scaleY;
+            return { ...el, x1: newX1, y1: newY1, x2: newX2, y2: newY2 };
           }
 
           return el;
@@ -296,6 +330,14 @@ export default function Whiteboard() {
         height: Math.max(20, prev.height + deltaY),
       }));
       resizeStartPos.current = svgPoint;
+      return;
+    }
+
+    if (currentShape && (tool === "line" || tool === "arrow")) {
+      setCurrentShape((prev) => ({
+        ...prev,
+        end: svgPoint,
+      }));
       return;
     }
 
@@ -347,6 +389,23 @@ export default function Whiteboard() {
       setCurrentPath(null);
     }
 
+    if (currentShape) {
+      setActiveBoardElements((prev) => [
+        ...prev,
+        {
+          type: currentShape.type,
+          x1: currentShape.start.x,
+          y1: currentShape.start.y,
+          x2: currentShape.end.x,
+          y2: currentShape.end.y,
+          color: currentShape.color,
+          strokeWidth: currentShape.strokeWidth,
+          id: currentShape.id,
+        },
+      ]);
+      setCurrentShape(null);
+    }
+
     if (mode === "select" && selectionRect) {
       const finalSelection = new Set();
       activeBoard.elements.forEach((element) => {
@@ -359,12 +418,18 @@ export default function Whiteboard() {
       elementStartPositions.current = new Map(
         Array.from(finalSelection).map((id) => {
           const el = activeBoard.elements.find((e) => e.id === id);
+          if (el.type === "text") {
+            return [id, { x: el.x, y: el.y }];
+          } else if (el.type === "line" || el.type === "arrow") {
+            return [
+              id,
+              { x1: el.x1, y1: el.y1, x2: el.x2, y2: el.y2 },
+            ];
+          }
           return [
             id,
             {
-              x: el.x || el.points[0][0],
-              y: el.y || el.points[0][1],
-              points: el.points?.map((p) => [...p]),
+              points: el.points.map((p) => [...p]),
             },
           ];
         })
@@ -391,6 +456,11 @@ export default function Whiteboard() {
         minY = el.y;
         maxX = el.x + (el.width || 100);
         maxY = el.y + (el.fontSize || 20);
+      } else if (el.type === "line" || el.type === "arrow") {
+        minX = Math.min(el.x1, el.x2);
+        minY = Math.min(el.y1, el.y2);
+        maxX = Math.max(el.x1, el.x2);
+        maxY = Math.max(el.y1, el.y2);
       } else {
         minX = Math.min(...el.points.map((p) => p[0]));
         minY = Math.min(...el.points.map((p) => p[1]));
@@ -399,10 +469,13 @@ export default function Whiteboard() {
       }
 
       elementsData.set(el.id, {
-        originalPoints: el.points?.map((p) => [...p]),
+        originalPoints: el.points ? el.points.map((p) => [...p]) : undefined,
         originalBoundingBox: { minX, minY, maxX, maxY },
         originalFontSize: el.fontSize,
         originalWidth: el.width,
+        ...(el.type === "line" || el.type === "arrow"
+          ? { x1: el.x1, y1: el.y1, x2: el.x2, y2: el.y2 }
+          : {}),
       });
     });
 
@@ -466,6 +539,17 @@ export default function Whiteboard() {
         element.x + textWidth > rect.x1 &&
         element.y < rect.y2 &&
         element.y + textHeight > rect.y1
+      );
+    } else if (element.type === "line" || element.type === "arrow") {
+      const minX = Math.min(element.x1, element.x2);
+      const maxX = Math.max(element.x1, element.x2);
+      const minY = Math.min(element.y1, element.y2);
+      const maxY = Math.max(element.y1, element.y2);
+      return (
+        minX < rect.x2 &&
+        maxX > rect.x1 &&
+        minY < rect.y2 &&
+        maxY > rect.y1
       );
     }
 
@@ -573,6 +657,10 @@ export default function Whiteboard() {
         isRecording={isRecording}
         startRecording={startRecording}
         stopRecording={stopRecording}
+        lineColor={lineColor}
+        setLineColor={setLineColor}
+        lineWidth={lineWidth}
+        setLineWidth={setLineWidth}
       />
 
       <div
@@ -604,6 +692,20 @@ export default function Whiteboard() {
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
+          {/* Add arrowhead marker definition */}
+          <defs>
+            <marker
+              id="arrowhead"
+              markerWidth="10"
+              markerHeight="7"
+              refX="9"
+              refY="3.5"
+              orient="auto"
+            >
+              <polygon points="0 0, 10 3.5, 0 7" fill="context-stroke" />
+            </marker>
+          </defs>
+
           {/* Draw base elements without overlays */}
           {activeBoard.elements.map((element) => (
             <g key={element.id}>
@@ -618,7 +720,7 @@ export default function Whiteboard() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
-              ) : (
+              ) : element.type === "text" ? (
                 <text
                   x={element.x}
                   y={element.y + element.fontSize}
@@ -628,7 +730,19 @@ export default function Whiteboard() {
                 >
                   {element.content}
                 </text>
-              )}
+              ) : element.type === "line" || element.type === "arrow" ? (
+                <line
+                  x1={element.x1}
+                  y1={element.y1}
+                  x2={element.x2}
+                  y2={element.y2}
+                  stroke={element.color}
+                  strokeWidth={element.strokeWidth}
+                  markerEnd={
+                    element.type === "arrow" ? "url(#arrowhead)" : undefined
+                  }
+                />
+              ) : null}
             </g>
           ))}
 
@@ -669,11 +783,17 @@ export default function Whiteboard() {
                             const el = activeBoard.elements.find(
                               (e) => e.id === id
                             );
+                            if (el.type === "line" || el.type === "arrow") {
+                              return [
+                                id,
+                                { x1: el.x1, y1: el.y1, x2: el.x2, y2: el.y2 },
+                              ];
+                            }
                             return [
                               id,
                               {
-                                x: el.x || el.points[0][0],
-                                y: el.y || el.points[0][1],
+                                x: el.x || (el.points && el.points[0][0]),
+                                y: el.y || (el.points && el.points[0][1]),
                                 points: el.points?.map((p) => [...p]),
                               },
                             ];
@@ -693,11 +813,17 @@ export default function Whiteboard() {
                             const el = activeBoard.elements.find(
                               (e) => e.id === id
                             );
+                            if (el.type === "line" || el.type === "arrow") {
+                              return [
+                                id,
+                                { x1: el.x1, y1: el.y1, x2: el.x2, y2: el.y2 },
+                              ];
+                            }
                             return [
                               id,
                               {
-                                x: el.x || el.points[0][0],
-                                y: el.y || el.points[0][1],
+                                x: el.x || (el.points && el.points[0][0]),
+                                y: el.y || (el.points && el.points[0][1]),
                                 points: el.points?.map((p) => [...p]),
                               },
                             ];
@@ -750,8 +876,7 @@ export default function Whiteboard() {
                     </g>
                   </g>
                 );
-              } else {
-                // For text elements
+              } else if (element.type === "text") {
                 return (
                   <g key={`${element.id}-overlay`}>
                     <rect
@@ -782,11 +907,17 @@ export default function Whiteboard() {
                             const el = activeBoard.elements.find(
                               (e) => e.id === id
                             );
+                            if (el.type === "line" || el.type === "arrow") {
+                              return [
+                                id,
+                                { x1: el.x1, y1: el.y1, x2: el.x2, y2: el.y2 },
+                              ];
+                            }
                             return [
                               id,
                               {
-                                x: el.x || el.points[0][0],
-                                y: el.y || el.points[0][1],
+                                x: el.x || (el.points && el.points[0][0]),
+                                y: el.y || (el.points && el.points[0][1]),
                                 points: el.points?.map((p) => [...p]),
                               },
                             ];
@@ -806,11 +937,17 @@ export default function Whiteboard() {
                             const el = activeBoard.elements.find(
                               (e) => e.id === id
                             );
+                            if (el.type === "line" || el.type === "arrow") {
+                              return [
+                                id,
+                                { x1: el.x1, y1: el.y1, x2: el.x2, y2: el.y2 },
+                              ];
+                            }
                             return [
                               id,
                               {
-                                x: el.x || el.points[0][0],
-                                y: el.y || el.points[0][1],
+                                x: el.x || (el.points && el.points[0][0]),
+                                y: el.y || (el.points && el.points[0][1]),
                                 points: el.points?.map((p) => [...p]),
                               },
                             ];
@@ -865,6 +1002,128 @@ export default function Whiteboard() {
                     </g>
                   </g>
                 );
+              } else if (element.type === "line" || element.type === "arrow") {
+                return (
+                  <g key={`${element.id}-overlay`}>
+                    <rect
+                      x={Math.min(element.x1, element.x2) - 5}
+                      y={Math.min(element.y1, element.y2) - 5}
+                      width={Math.abs(element.x2 - element.x1) + 10}
+                      height={Math.abs(element.y2 - element.y1) + 10}
+                      fill="none"
+                      stroke="#0070f3"
+                      strokeWidth="1"
+                      strokeDasharray="4 2"
+                    />
+                    {/* Move icon */}
+                    <g
+                      transform={`translate(${Math.max(element.x1, element.x2) + 10}, ${Math.min(element.y1, element.y2) - 10})`}
+                      style={{ cursor: "move" }}
+                      onMouseDown={(e) => {
+                        e.stopPropagation();
+                        setIsMoveIconDragging(true);
+                        dragStartPos.current = getSVGPoint(
+                          e.clientX,
+                          e.clientY
+                        );
+                        elementStartPositions.current = new Map(
+                          Array.from(selectedElements).map((id) => {
+                            const el = activeBoard.elements.find(
+                              (e) => e.id === id
+                            );
+                            if (el.type === "line" || el.type === "arrow") {
+                              return [
+                                id,
+                                { x1: el.x1, y1: el.y1, x2: el.x2, y2: el.y2 },
+                              ];
+                            }
+                            return [
+                              id,
+                              {
+                                x: el.x || (el.points && el.points[0][0]),
+                                y: el.y || (el.points && el.points[0][1]),
+                                points: el.points?.map((p) => [...p]),
+                              },
+                            ];
+                          })
+                        );
+                      }}
+                      onTouchStart={(e) => {
+                        e.stopPropagation();
+                        setIsMoveIconDragging(true);
+                        const touch = e.touches[0];
+                        dragStartPos.current = getSVGPoint(
+                          touch.clientX,
+                          touch.clientY
+                        );
+                        elementStartPositions.current = new Map(
+                          Array.from(selectedElements).map((id) => {
+                            const el = activeBoard.elements.find(
+                              (e) => e.id === id
+                            );
+                            if (el.type === "line" || el.type === "arrow") {
+                              return [
+                                id,
+                                { x1: el.x1, y1: el.y1, x2: el.x2, y2: el.y2 },
+                              ];
+                            }
+                            return [
+                              id,
+                              {
+                                x: el.x || (el.points && el.points[0][0]),
+                                y: el.y || (el.points && el.points[0][1]),
+                                points: el.points?.map((p) => [...p]),
+                              },
+                            ];
+                          })
+                        );
+                      }}
+                    >
+                      <circle
+                        cx={0}
+                        cy={0}
+                        r="12"
+                        fill="white"
+                        stroke="#0070f3"
+                        strokeWidth="2"
+                      />
+                      <g transform="translate(-10, -10)">
+                        <LuMove color="#0070f3" size={20} />
+                      </g>
+                    </g>
+                    {/* Resize icon */}
+                    <g
+                      transform={`translate(${Math.max(element.x1, element.x2) + 10}, ${Math.max(element.y1, element.y2) + 10})`}
+                      style={{ cursor: "nwse-resize" }}
+                      onMouseDown={(e) => handleResizeStart(e, element)}
+                      onTouchStart={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const touch = e.touches[0];
+                        handleResizeStart(
+                          {
+                            ...e,
+                            clientX: touch.clientX,
+                            clientY: touch.clientY,
+                          },
+                          element
+                        );
+                      }}
+                    >
+                      <circle
+                        cx={0}
+                        cy={0}
+                        r="12"
+                        fill="white"
+                        stroke="#0070f3"
+                        strokeWidth="2"
+                      />
+                      <g transform="translate(-10, -10)">
+                        <LuMoveDiagonal2 color="#0070f3" size={20} />
+                      </g>
+                    </g>
+                  </g>
+                );
               }
             })}
 
@@ -878,6 +1137,21 @@ export default function Whiteboard() {
               strokeLinecap="round"
               strokeLinejoin="round"
               opacity={currentPath.type === "highlight" ? 0.5 : 1}
+            />
+          )}
+
+          {/* Draw current shape preview */}
+          {currentShape && (
+            <line
+              x1={currentShape.start.x}
+              y1={currentShape.start.y}
+              x2={currentShape.end.x}
+              y2={currentShape.end.y}
+              stroke={currentShape.color}
+              strokeWidth={currentShape.strokeWidth}
+              markerEnd={
+                currentShape.type === "arrow" ? "url(#arrowhead)" : undefined
+              }
             />
           )}
 

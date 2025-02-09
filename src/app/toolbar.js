@@ -15,6 +15,8 @@ import {
   LuCircle,
   LuSquare,
   LuChevronDown,
+  LuMinus,
+  LuArrowRight,
 } from "react-icons/lu";
 import { motion } from "framer-motion";
 
@@ -53,6 +55,11 @@ const Toolbar = ({
   setDarkMode,
   startRecording,
   stopRecording,
+  // New props for line and arrow
+  lineColor,
+  setLineColor,
+  lineWidth,
+  setLineWidth,
 }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [showToolOptions, setShowToolOptions] = useState(false);
@@ -230,6 +237,19 @@ const Toolbar = ({
                     icon={LuType}
                     isActive={tool === "text"}
                   />
+                  {/* New shape tools */}
+                  <ToolbarButton
+                    onClick={() => setTool("line")}
+                    title="Line"
+                    icon={LuMinus}
+                    isActive={tool === "line"}
+                  />
+                  <ToolbarButton
+                    onClick={() => setTool("arrow")}
+                    title="Arrow"
+                    icon={LuArrowRight}
+                    isActive={tool === "arrow"}
+                  />
                 </div>
                 {/* Always show tool options toggle */}
                 <ToolbarButton
@@ -324,6 +344,19 @@ const Toolbar = ({
               title="Text"
               icon={LuType}
               isActive={tool === "text"}
+            />
+            {/* New shape tools for mobile */}
+            <ToolbarButton
+              onClick={() => setTool("line")}
+              title="Line"
+              icon={LuMinus}
+              isActive={tool === "line"}
+            />
+            <ToolbarButton
+              onClick={() => setTool("arrow")}
+              title="Arrow"
+              icon={LuArrowRight}
+              isActive={tool === "arrow"}
             />
           </div>
           {tool === "pen" && (
@@ -422,6 +455,37 @@ const Toolbar = ({
                     );
                   }
                 }}
+                className="w-12 text-xs border rounded-full px-1 py-0.5 text-black"
+              />
+            </div>
+          )}
+          {(tool === "line" || tool === "arrow") && (
+            <div className="flex items-center gap-2">
+              <label
+                className={`text-xs font-medium ${
+                  darkMode ? "text-gray-200" : "text-gray-700"
+                }`}
+              >
+                Color:
+              </label>
+              <input
+                type="color"
+                value={lineColor}
+                onChange={(e) => setLineColor(e.target.value)}
+                className="w-6 h-6 border-none bg-transparent rounded-full"
+              />
+              <label
+                className={`text-xs font-medium ${
+                  darkMode ? "text-gray-200" : "text-gray-700"
+                }`}
+              >
+                Size:
+              </label>
+              <input
+                type="number"
+                min="1"
+                value={lineWidth}
+                onChange={(e) => setLineWidth(Number(e.target.value))}
                 className="w-12 text-xs border rounded-full px-1 py-0.5 text-black"
               />
             </div>
