@@ -55,11 +55,14 @@ const Toolbar = ({
   setDarkMode,
   startRecording,
   stopRecording,
-  // New props for line and arrow
   lineColor,
   setLineColor,
   lineWidth,
   setLineWidth,
+  arrowColor,
+  setArrowColor,
+  arrowWidth,
+  setArrowWidth,
 }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [showToolOptions, setShowToolOptions] = useState(false);
@@ -459,14 +462,14 @@ const Toolbar = ({
               />
             </div>
           )}
-          {(tool === "line" || tool === "arrow") && (
+          {tool === "line" && (
             <div className="flex items-center gap-2">
               <label
                 className={`text-xs font-medium ${
                   darkMode ? "text-gray-200" : "text-gray-700"
                 }`}
               >
-                Color:
+                Line Color:
               </label>
               <input
                 type="color"
@@ -479,13 +482,44 @@ const Toolbar = ({
                   darkMode ? "text-gray-200" : "text-gray-700"
                 }`}
               >
-                Size:
+                Line Size:
               </label>
               <input
                 type="number"
                 min="1"
                 value={lineWidth}
                 onChange={(e) => setLineWidth(Number(e.target.value))}
+                className="w-12 text-xs border rounded-full px-1 py-0.5 text-black"
+              />
+            </div>
+          )}
+          {tool === "arrow" && (
+            <div className="flex items-center gap-2">
+              <label
+                className={`text-xs font-medium ${
+                  darkMode ? "text-gray-200" : "text-gray-700"
+                }`}
+              >
+                Arrow Color:
+              </label>
+              <input
+                type="color"
+                value={arrowColor}
+                onChange={(e) => setArrowColor(e.target.value)}
+                className="w-6 h-6 border-none bg-transparent rounded-full"
+              />
+              <label
+                className={`text-xs font-medium ${
+                  darkMode ? "text-gray-200" : "text-gray-700"
+                }`}
+              >
+                Arrow Size:
+              </label>
+              <input
+                type="number"
+                min="1"
+                value={arrowWidth}
+                onChange={(e) => setArrowWidth(Number(e.target.value))}
                 className="w-12 text-xs border rounded-full px-1 py-0.5 text-black"
               />
             </div>

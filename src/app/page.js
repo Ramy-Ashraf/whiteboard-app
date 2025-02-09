@@ -29,9 +29,13 @@ export default function Whiteboard() {
   const [textColor, setTextColor] = useState("#000000");
   const [penWidth, setPenWidth] = useState(6);
   const [highlightWidth, setHighlightWidth] = useState(40);
-  // New states for line and arrow customization
+  // States for line customization
   const [lineColor, setLineColor] = useState("#000000");
   const [lineWidth, setLineWidth] = useState(6);
+  // New states for arrow customization
+  const [arrowColor, setArrowColor] = useState("#000000");
+  const [arrowWidth, setArrowWidth] = useState(4);
+
   const [selectedElements, setSelectedElements] = useState(new Set());
   const [drawing, setDrawing] = useState(false);
   const [currentPath, setCurrentPath] = useState(null);
@@ -164,12 +168,14 @@ export default function Whiteboard() {
         });
         setIsDragging(true);
       } else if (tool === "line" || tool === "arrow") {
+        const chosenColor = tool === "line" ? lineColor : arrowColor;
+        const chosenWidth = tool === "line" ? lineWidth : arrowWidth;
         setCurrentShape({
           type: tool,
           start: svgPoint,
           end: svgPoint,
-          color: lineColor,
-          strokeWidth: lineWidth,
+          color: chosenColor,
+          strokeWidth: chosenWidth,
           id: Date.now(),
         });
         setDrawing(true);
@@ -215,10 +221,7 @@ export default function Whiteboard() {
             if (el.type === "text") {
               return [id, { x: el.x, y: el.y }];
             } else if (el.type === "line" || el.type === "arrow") {
-              return [
-                id,
-                { x1: el.x1, y1: el.y1, x2: el.x2, y2: el.y2 },
-              ];
+              return [id, { x1: el.x1, y1: el.y1, x2: el.x2, y2: el.y2 }];
             }
             return [
               id,
@@ -421,10 +424,7 @@ export default function Whiteboard() {
           if (el.type === "text") {
             return [id, { x: el.x, y: el.y }];
           } else if (el.type === "line" || el.type === "arrow") {
-            return [
-              id,
-              { x1: el.x1, y1: el.y1, x2: el.x2, y2: el.y2 },
-            ];
+            return [id, { x1: el.x1, y1: el.y1, x2: el.x2, y2: el.y2 }];
           }
           return [
             id,
@@ -546,10 +546,7 @@ export default function Whiteboard() {
       const minY = Math.min(element.y1, element.y2);
       const maxY = Math.max(element.y1, element.y2);
       return (
-        minX < rect.x2 &&
-        maxX > rect.x1 &&
-        minY < rect.y2 &&
-        maxY > rect.y1
+        minX < rect.x2 && maxX > rect.x1 && minY < rect.y2 && maxY > rect.y1
       );
     }
 
@@ -661,6 +658,10 @@ export default function Whiteboard() {
         setLineColor={setLineColor}
         lineWidth={lineWidth}
         setLineWidth={setLineWidth}
+        arrowColor={arrowColor}
+        setArrowColor={setArrowColor}
+        arrowWidth={arrowWidth}
+        setArrowWidth={setArrowWidth}
       />
 
       <div
@@ -1017,7 +1018,9 @@ export default function Whiteboard() {
                     />
                     {/* Move icon */}
                     <g
-                      transform={`translate(${Math.max(element.x1, element.x2) + 10}, ${Math.min(element.y1, element.y2) - 10})`}
+                      transform={`translate(${
+                        Math.max(element.x1, element.x2) + 10
+                      }, ${Math.min(element.y1, element.y2) - 10})`}
                       style={{ cursor: "move" }}
                       onMouseDown={(e) => {
                         e.stopPropagation();
@@ -1093,7 +1096,9 @@ export default function Whiteboard() {
                     </g>
                     {/* Resize icon */}
                     <g
-                      transform={`translate(${Math.max(element.x1, element.x2) + 10}, ${Math.max(element.y1, element.y2) + 10})`}
+                      transform={`translate(${
+                        Math.max(element.x1, element.x2) + 10
+                      }, ${Math.max(element.y1, element.y2) + 10})`}
                       style={{ cursor: "nwse-resize" }}
                       onMouseDown={(e) => handleResizeStart(e, element)}
                       onTouchStart={(e) => {
