@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import {LuMove, LuMoveDiagonal2} from "react-icons/lu";
+import { LuMove, LuMoveDiagonal2 } from "react-icons/lu";
 import Toolbar from "./toolbar";
 
 export default function Whiteboard() {
@@ -660,7 +660,10 @@ export default function Whiteboard() {
                       onMouseDown={(e) => {
                         e.stopPropagation();
                         setIsMoveIconDragging(true);
-                        dragStartPos.current = getSVGPoint(e.clientX, e.clientY);
+                        dragStartPos.current = getSVGPoint(
+                          e.clientX,
+                          e.clientY
+                        );
                         elementStartPositions.current = new Map(
                           Array.from(selectedElements).map((id) => {
                             const el = activeBoard.elements.find(
@@ -770,7 +773,10 @@ export default function Whiteboard() {
                       onMouseDown={(e) => {
                         e.stopPropagation();
                         setIsMoveIconDragging(true);
-                        dragStartPos.current = getSVGPoint(e.clientX, e.clientY);
+                        dragStartPos.current = getSVGPoint(
+                          e.clientX,
+                          e.clientY
+                        );
                         elementStartPositions.current = new Map(
                           Array.from(selectedElements).map((id) => {
                             const el = activeBoard.elements.find(
@@ -865,9 +871,7 @@ export default function Whiteboard() {
           {/* Draw current drawing path (during live drawing) */}
           {currentPath && (
             <path
-              d={`M ${currentPath.points
-                .map((p) => p.join(" "))
-                .join(" L ")}`}
+              d={`M ${currentPath.points.map((p) => p.join(" ")).join(" L ")}`}
               stroke={currentPath.color}
               fill="none"
               strokeWidth={currentPath.strokeWidth}
