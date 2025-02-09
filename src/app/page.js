@@ -708,9 +708,9 @@ export default function Whiteboard() {
                 d="M1,1 L9,5 L1,9"
                 fill="none"
                 stroke="context-stroke"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
               />
             </marker>
           </defs>
