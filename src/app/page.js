@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useRef, useEffect } from "react";
 import { LuMove, LuMoveDiagonal2 } from "react-icons/lu";
@@ -32,12 +32,9 @@ export default function Whiteboard() {
   // States for line customization
   const [lineColor, setLineColor] = useState("#000000");
   const [lineWidth, setLineWidth] = useState(6);
-  // States for arrow customization
+  // New states for arrow customization
   const [arrowColor, setArrowColor] = useState("#000000");
   const [arrowWidth, setArrowWidth] = useState(4);
-  // States for circle customization
-  const [circleColor, setCircleColor] = useState("#000000");
-  const [circleWidth, setCircleWidth] = useState(4);
 
   const [selectedElements, setSelectedElements] = useState(new Set());
   const [drawing, setDrawing] = useState(false);
@@ -182,17 +179,6 @@ export default function Whiteboard() {
           id: Date.now(),
         });
         setDrawing(true);
-      } else if (tool === "circle") {
-        setCurrentShape({
-          type: "circle",
-          cx: svgPoint.x,
-          cy: svgPoint.y,
-          r: 0,
-          color: circleColor,
-          strokeWidth: circleWidth,
-          id: Date.now(),
-        });
-        setDrawing(true);
       }
     } else if (mode === "select") {
       dragStartPos.current = svgPoint;
@@ -236,8 +222,6 @@ export default function Whiteboard() {
               return [id, { x: el.x, y: el.y }];
             } else if (el.type === "line" || el.type === "arrow") {
               return [id, { x1: el.x1, y1: el.y1, x2: el.x2, y2: el.y2 }];
-            } else if (el.type === "circle") {
-              return [id, { cx: el.cx, cy: el.cy, r: el.r }];
             }
             return [
               id,
@@ -278,12 +262,6 @@ export default function Whiteboard() {
               y1: startPos.y1 + deltaY,
               x2: startPos.x2 + deltaX,
               y2: startPos.y2 + deltaY,
-            };
-          } else if (el.type === "circle") {
-            return {
-              ...el,
-              cx: startPos.cx + deltaX,
-              cy: startPos.cy + deltaY,
             };
           }
           return {
@@ -341,9 +319,6 @@ export default function Whiteboard() {
             const newX2 = minX + (startData.x2 - minX) * scaleX;
             const newY2 = minY + (startData.y2 - minY) * scaleY;
             return { ...el, x1: newX1, y1: newY1, x2: newX2, y2: newY2 };
-          } else if (el.type === "circle") {
-            const newRadius = startData.r * scaleX;
-            return { ...el, r: newRadius };
           }
 
           return el;
@@ -365,18 +340,6 @@ export default function Whiteboard() {
       setCurrentShape((prev) => ({
         ...prev,
         end: svgPoint,
-      }));
-      return;
-    }
-
-    if (currentShape?.type === "circle") {
-      const radius = Math.sqrt(
-        Math.pow(svgPoint.x - currentShape.cx, 2) +
-        Math.pow(svgPoint.y - currentShape.cy, 2)
-      );
-      setCurrentShape((prev) => ({
-        ...prev,
-        r: radius,
       }));
       return;
     }
@@ -434,18 +397,10 @@ export default function Whiteboard() {
         ...prev,
         {
           type: currentShape.type,
-          ...(currentShape.type === "circle"
-            ? {
-                cx: currentShape.cx,
-                cy: currentShape.cy,
-                r: currentShape.r,
-              }
-            : {
-                x1: currentShape.start.x,
-                y1: currentShape.start.y,
-                x2: currentShape.end.x,
-                y2: currentShape.end.y,
-              }),
+          x1: currentShape.start.x,
+          y1: currentShape.start.y,
+          x2: currentShape.end.x,
+          y2: currentShape.end.y,
           color: currentShape.color,
           strokeWidth: currentShape.strokeWidth,
           id: currentShape.id,
@@ -470,8 +425,6 @@ export default function Whiteboard() {
             return [id, { x: el.x, y: el.y }];
           } else if (el.type === "line" || el.type === "arrow") {
             return [id, { x1: el.x1, y1: el.y1, x2: el.x2, y2: el.y2 }];
-          } else if (el.type === "circle") {
-            return [id, { cx: el.cx, cy: el.cy, r: el.r }];
           }
           return [
             id,
@@ -508,11 +461,6 @@ export default function Whiteboard() {
         minY = Math.min(el.y1, el.y2);
         maxX = Math.max(el.x1, el.x2);
         maxY = Math.max(el.y1, el.y2);
-      } else if (el.type === "circle") {
-        minX = el.cx - el.r;
-        minY = el.cy - el.r;
-        maxX = el.cx + el.r;
-        maxY = el.cy + el.r;
       } else {
         minX = Math.min(...el.points.map((p) => p[0]));
         minY = Math.min(...el.points.map((p) => p[1]));
@@ -527,8 +475,6 @@ export default function Whiteboard() {
         originalWidth: el.width,
         ...(el.type === "line" || el.type === "arrow"
           ? { x1: el.x1, y1: el.y1, x2: el.x2, y2: el.y2 }
-          : el.type === "circle"
-          ? { cx: el.cx, cy: el.cy, r: el.r }
           : {}),
       });
     });
@@ -601,13 +547,6 @@ export default function Whiteboard() {
       const maxY = Math.max(element.y1, element.y2);
       return (
         minX < rect.x2 && maxX > rect.x1 && minY < rect.y2 && maxY > rect.y1
-      );
-    } else if (element.type === "circle") {
-      return (
-        element.cx - element.r < rect.x2 &&
-        element.cx + element.r > rect.x1 &&
-        element.cy - element.r < rect.y2 &&
-        element.cy + element.r > rect.y1
       );
     }
 
@@ -723,10 +662,6 @@ export default function Whiteboard() {
         setArrowColor={setArrowColor}
         arrowWidth={arrowWidth}
         setArrowWidth={setArrowWidth}
-        circleColor={circleColor}
-        setCircleColor={setCircleColor}
-        circleWidth={circleWidth}
-        setCircleWidth={setCircleWidth}
       />
 
       <div
@@ -815,15 +750,6 @@ export default function Whiteboard() {
                   markerEnd={
                     element.type === "arrow" ? "url(#arrowhead)" : undefined
                   }
-                />
-              ) : element.type === "circle" ? (
-                <circle
-                  cx={element.cx}
-                  cy={element.cy}
-                  r={element.r}
-                  stroke={element.color}
-                  strokeWidth={element.strokeWidth}
-                  fill="none"
                 />
               ) : null}
             </g>
@@ -1211,132 +1137,6 @@ export default function Whiteboard() {
                     </g>
                   </g>
                 );
-              } else if (element.type === "circle") {
-                return (
-                  <g key={`${element.id}-overlay`}>
-                    <rect
-                      x={element.cx - element.r - 5}
-                      y={element.cy - element.r - 5}
-                      width={element.r * 2 + 10}
-                      height={element.r * 2 + 10}
-                      fill="none"
-                      stroke="#0070f3"
-                      strokeWidth="1"
-                      strokeDasharray="4 2"
-                    />
-                    {/* Move icon */}
-                    <g
-                      transform={`translate(${element.cx + element.r + 10}, ${
-                        element.cy - element.r - 10
-                      })`}
-                      style={{ cursor: "move" }}
-                      onMouseDown={(e) => {
-                        e.stopPropagation();
-                        setIsMoveIconDragging(true);
-                        dragStartPos.current = getSVGPoint(
-                          e.clientX,
-                          e.clientY
-                        );
-                        elementStartPositions.current = new Map(
-                          Array.from(selectedElements).map((id) => {
-                            const el = activeBoard.elements.find(
-                              (e) => e.id === id
-                            );
-                            if (el.type === "circle") {
-                              return [
-                                id,
-                                { cx: el.cx, cy: el.cy, r: el.r },
-                              ];
-                            }
-                            return [
-                              id,
-                              {
-                                x: el.x || (el.points && el.points[0][0]),
-                                y: el.y || (el.points && el.points[0][1]),
-                                points: el.points?.map((p) => [...p]),
-                              },
-                            ];
-                          })
-                        );
-                      }}
-                      onTouchStart={(e) => {
-                        e.stopPropagation();
-                        setIsMoveIconDragging(true);
-                        const touch = e.touches[0];
-                        dragStartPos.current = getSVGPoint(
-                          touch.clientX,
-                          touch.clientY
-                        );
-                        elementStartPositions.current = new Map(
-                          Array.from(selectedElements).map((id) => {
-                            const el = activeBoard.elements.find(
-                              (e) => e.id === id
-                            );
-                            if (el.type === "circle") {
-                              return [
-                                id,
-                                { cx: el.cx, cy: el.cy, r: el.r },
-                              ];
-                            }
-                            return [
-                              id,
-                              {
-                                x: el.x || (el.points && el.points[0][0]),
-                                y: el.y || (el.points && el.points[0][1]),
-                                points: el.points?.map((p) => [...p]),
-                              },
-                            ];
-                          })
-                        );
-                      }}
-                    >
-                      <circle
-                        cx={0}
-                        cy={0}
-                        r="12"
-                        fill="white"
-                        stroke="#0070f3"
-                        strokeWidth="2"
-                      />
-                      <g transform="translate(-10, -10)">
-                        <LuMove color="#0070f3" size={20} />
-                      </g>
-                    </g>
-                    {/* Resize icon */}
-                    <g
-                      transform={`translate(${element.cx + element.r + 10}, ${
-                        element.cy + element.r + 10
-                      })`}
-                      style={{ cursor: "nwse-resize" }}
-                      onMouseDown={(e) => handleResizeStart(e, element)}
-                      onTouchStart={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        const touch = e.touches[0];
-                        handleResizeStart(
-                          {
-                            ...e,
-                            clientX: touch.clientX,
-                            clientY: touch.clientY,
-                          },
-                          element
-                        );
-                      }}
-                    >
-                      <circle
-                        cx={0}
-                        cy={0}
-                        r="12"
-                        fill="white"
-                        stroke="#0070f3"
-                        strokeWidth="2"
-                      />
-                      <g transform="translate(-10, -10)">
-                        <LuMoveDiagonal2 color="#0070f3" size={20} />
-                      </g>
-                    </g>
-                  </g>
-                );
               }
             })}
 
@@ -1355,30 +1155,17 @@ export default function Whiteboard() {
 
           {/* Draw current shape preview */}
           {currentShape && (
-            <>
-              {currentShape.type === "line" || currentShape.type === "arrow" ? (
-                <line
-                  x1={currentShape.start.x}
-                  y1={currentShape.start.y}
-                  x2={currentShape.end.x}
-                  y2={currentShape.end.y}
-                  stroke={currentShape.color}
-                  strokeWidth={currentShape.strokeWidth}
-                  markerEnd={
-                    currentShape.type === "arrow" ? "url(#arrowhead)" : undefined
-                  }
-                />
-              ) : currentShape.type === "circle" ? (
-                <circle
-                  cx={currentShape.cx}
-                  cy={currentShape.cy}
-                  r={currentShape.r}
-                  stroke={currentShape.color}
-                  strokeWidth={currentShape.strokeWidth}
-                  fill="none"
-                />
-              ) : null}
-            </>
+            <line
+              x1={currentShape.start.x}
+              y1={currentShape.start.y}
+              x2={currentShape.end.x}
+              y2={currentShape.end.y}
+              stroke={currentShape.color}
+              strokeWidth={currentShape.strokeWidth}
+              markerEnd={
+                currentShape.type === "arrow" ? "url(#arrowhead)" : undefined
+              }
+            />
           )}
 
           {/* Draw selection rectangle */}

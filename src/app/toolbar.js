@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import {
@@ -63,10 +63,6 @@ const Toolbar = ({
   setArrowColor,
   arrowWidth,
   setArrowWidth,
-  circleColor,
-  setCircleColor,
-  circleWidth,
-  setCircleWidth,
 }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [showToolOptions, setShowToolOptions] = useState(false);
@@ -257,12 +253,6 @@ const Toolbar = ({
                     icon={LuArrowRight}
                     isActive={tool === "arrow"}
                   />
-                  <ToolbarButton
-                    onClick={() => setTool("circle")}
-                    title="Circle"
-                    icon={LuCircle}
-                    isActive={tool === "circle"}
-                  />
                 </div>
                 {/* Always show tool options toggle */}
                 <ToolbarButton
@@ -370,12 +360,6 @@ const Toolbar = ({
               title="Arrow"
               icon={LuArrowRight}
               isActive={tool === "arrow"}
-            />
-            <ToolbarButton
-              onClick={() => setTool("circle")}
-              title="Circle"
-              icon={LuCircle}
-              isActive={tool === "circle"}
             />
           </div>
           {tool === "pen" && (
@@ -536,37 +520,6 @@ const Toolbar = ({
                 min="1"
                 value={arrowWidth}
                 onChange={(e) => setArrowWidth(Number(e.target.value))}
-                className="w-12 text-xs border rounded-full px-1 py-0.5 text-black"
-              />
-            </div>
-          )}
-          {tool === "circle" && (
-            <div className="flex items-center gap-2">
-              <label
-                className={`text-xs font-medium ${
-                  darkMode ? "text-gray-200" : "text-gray-700"
-                }`}
-              >
-                Circle Color:
-              </label>
-              <input
-                type="color"
-                value={circleColor}
-                onChange={(e) => setCircleColor(e.target.value)}
-                className="w-6 h-6 border-none bg-transparent rounded-full"
-              />
-              <label
-                className={`text-xs font-medium ${
-                  darkMode ? "text-gray-200" : "text-gray-700"
-                }`}
-              >
-                Circle Size:
-              </label>
-              <input
-                type="number"
-                min="1"
-                value={circleWidth}
-                onChange={(e) => setCircleWidth(Number(e.target.value))}
                 className="w-12 text-xs border rounded-full px-1 py-0.5 text-black"
               />
             </div>
