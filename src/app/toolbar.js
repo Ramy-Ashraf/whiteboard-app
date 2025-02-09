@@ -15,7 +15,7 @@ import {
   LuCircle,
   LuSquare,
   LuChevronDown,
-  LuMinus,
+  LuSlash,
   LuArrowRight,
 } from "react-icons/lu";
 import { motion } from "framer-motion";
@@ -244,7 +244,7 @@ const Toolbar = ({
                   <ToolbarButton
                     onClick={() => setTool("line")}
                     title="Line"
-                    icon={LuMinus}
+                    icon={LuSlash}
                     isActive={tool === "line"}
                   />
                   <ToolbarButton
@@ -352,7 +352,7 @@ const Toolbar = ({
             <ToolbarButton
               onClick={() => setTool("line")}
               title="Line"
-              icon={LuMinus}
+              icon={LuSlash}
               isActive={tool === "line"}
             />
             <ToolbarButton

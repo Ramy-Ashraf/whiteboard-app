@@ -698,12 +698,20 @@ export default function Whiteboard() {
             <marker
               id="arrowhead"
               markerWidth="10"
-              markerHeight="7"
-              refX="9"
-              refY="3.5"
+              markerHeight="10"
+              refX="7"
+              refY="5"
               orient="auto"
+              markerUnits="strokeWidth"
             >
-              <polygon points="0 0, 10 3.5, 0 7" fill="context-stroke" />
+              <path
+                d="M1,1 L9,5 L1,9"
+                fill="none"
+                stroke="context-stroke"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
             </marker>
           </defs>
 
