@@ -15,7 +15,7 @@ This is a minimal whiteboard application using Next.js
    ```
 2. Navigate to the project folder:
    ```
-   cd ~/whiteboard-app2
+   cd ~/whiteboard-app
    ```
 3. Open development server:
 
