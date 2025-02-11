@@ -1,4 +1,34 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Whiteboard App
+
+This is a minimal whiteboard application using HTML, CSS, and JavaScript.
+
+## Features
+- Canvas drawing with pen, highlight, text, line, and arrow tools.
+- Toggle between dark and light modes.
+- PDF upload and board management.
+- Recording functionality.
+
+## Setup & Usage
+1. Clone the repository.
+2. Navigate to the project folder:
+   ```
+   cd /home/ramy/whiteboard-app2
+   ```
+3. Open `index.html` in your browser to start.
+
+## Project Structure
+- **index.html**: Main HTML file with the canvas and script links.
+- **style.css**: Styles for the application.
+- **main.js**: Logic for drawing and canvas events.
+- **src/app/toolbar.js**: React component for the drawing toolbar.
+
+## Customization
+- Adjust tool settings and colors in `toolbar.js`.
+- Modify layout and styles in `style.css`.
+
+## Dependencies
+- React Icons
+- Framer Motion
 
 ## Getting Started
 
@@ -29,8 +59,3 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
