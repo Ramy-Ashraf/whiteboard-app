@@ -1,6 +1,6 @@
 # Whiteboard App
 
-This is a minimal whiteboard application using HTML, CSS, and JavaScript.
+This is a minimal whiteboard application using Next.js
 
 ## Features
 - Canvas drawing with pen, highlight, text, line, and arrow tools.
@@ -10,29 +10,14 @@ This is a minimal whiteboard application using HTML, CSS, and JavaScript.
 
 ## Setup & Usage
 1. Clone the repository.
+   ```
+   git clone https://github.com/Ramy-Ashraf/whiteboard-app.git
+   ```
 2. Navigate to the project folder:
    ```
-   cd /home/ramy/whiteboard-app2
+   cd ~/whiteboard-app2
    ```
-3. Open `index.html` in your browser to start.
-
-## Project Structure
-- **index.html**: Main HTML file with the canvas and script links.
-- **style.css**: Styles for the application.
-- **main.js**: Logic for drawing and canvas events.
-- **src/app/toolbar.js**: React component for the drawing toolbar.
-
-## Customization
-- Adjust tool settings and colors in `toolbar.js`.
-- Modify layout and styles in `style.css`.
-
-## Dependencies
-- React Icons
-- Framer Motion
-
-## Getting Started
-
-First, run the development server:
+3. Open development server:
 
 ```bash
 npm run dev
@@ -43,19 +28,29 @@ pnpm dev
 # or
 bun dev
 ```
-
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## Project Structure
+- **public/**: Static assets
+  - favicon.ico 
+  - file.svg
+  - ...
+- **src/app/**: Application source code
+  - page.js: Main whiteboard component
+  - toolbar.js: Drawing toolbar component
+  - ...
+- **next.config.mjs**: Next.js configuration
+- **package.json**: Project dependencies and scripts
+- **postcss.config.mjs**: PostCSS configuration  
+- **tailwind.config.mjs**: Tailwind CSS configuration
+- **eslint.config.mjs**: ESLint configuration
+- **jsconfig.json**: JavaScript configuration
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Customization
+- Adjust tool settings and colors in `toolbar.js`.
+- Modify layout and styles in `style.css`.
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Dependencies
+- React Icons
+- Framer Motion
 
