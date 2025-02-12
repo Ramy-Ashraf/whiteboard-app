@@ -35,11 +35,15 @@ export default function Whiteboard() {
   // New states for arrow customization
   const [arrowColor, setArrowColor] = useState("#000000");
   const [arrowWidth, setArrowWidth] = useState(4);
+  // New states for circle border controls:
+  const [circleStrokeColor, setCircleStrokeColor] = useState("#000000");
+  const [circleStrokeWidth, setCircleStrokeWidth] = useState(6);
 
   const [selectedElements, setSelectedElements] = useState(new Set());
   const [drawing, setDrawing] = useState(false);
   const [currentPath, setCurrentPath] = useState(null);
   const [currentShape, setCurrentShape] = useState(null);
+  const [currentCircle, setCurrentCircle] = useState(null);
   const [textBox, setTextBox] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [selectionRect, setSelectionRect] = useState(null);
@@ -179,6 +183,16 @@ export default function Whiteboard() {
           id: Date.now(),
         });
         setDrawing(true);
+      } else if (tool === "circle") {
+        setCurrentCircle({
+          type: "circle",
+          center: { ...svgPoint },
+          radius: 0,
+          color: circleStrokeColor,
+          strokeWidth: circleStrokeWidth,
+          id: Date.now(),
+        });
+        setDrawing(true);
       }
     } else if (mode === "select") {
       dragStartPos.current = svgPoint;
@@ -253,7 +267,15 @@ export default function Whiteboard() {
           const startPos = elementStartPositions.current.get(el.id);
           if (!startPos) return el;
 
-          if (el.type === "text") {
+          if (el.type === "circle" && startPos.center) {
+            return {
+              ...el,
+              center: {
+                x: startPos.center.x + deltaX,
+                y: startPos.center.y + deltaY,
+              },
+            };
+          } else if (el.type === "text") {
             return { ...el, x: startPos.x + deltaX, y: startPos.y + deltaY };
           } else if (el.type === "line" || el.type === "arrow") {
             return {
@@ -263,14 +285,13 @@ export default function Whiteboard() {
               x2: startPos.x2 + deltaX,
               y2: startPos.y2 + deltaY,
             };
+          } else if (startPos.points) {
+            return {
+              ...el,
+              points: startPos.points.map(([x, y]) => [x + deltaX, y + deltaY]),
+            };
           }
-          return {
-            ...el,
-            points: startPos.points.map(([px, py]) => [
-              px + deltaX,
-              py + deltaY,
-            ]),
-          };
+          return el;
         })
       );
       return;
@@ -285,6 +306,15 @@ export default function Whiteboard() {
           if (!selectedElements.has(el.id)) return el;
           const startData = elementStartPositions.current.get(el.id);
           if (!startData) return el;
+
+          // Added circle-specific resizing logic:
+          if (el.type === "circle") {
+            const delta = svgPoint.x - resizeStartPos.current.x;
+            return {
+              ...el,
+              radius: Math.max(5, startData.originalRadius + delta)
+            };
+          }
 
           const {
             originalBoundingBox,
@@ -319,6 +349,12 @@ export default function Whiteboard() {
             const newX2 = minX + (startData.x2 - minX) * scaleX;
             const newY2 = minY + (startData.y2 - minY) * scaleY;
             return { ...el, x1: newX1, y1: newY1, x2: newX2, y2: newY2 };
+          } else if (el.type === "circle") {
+            const newRadius = Math.sqrt(
+              (svgPoint.x - startData.originalCenter.x) ** 2 +
+              (svgPoint.y - startData.originalCenter.y) ** 2
+            );
+            return { ...el, radius: newRadius };
           }
 
           return el;
@@ -341,6 +377,13 @@ export default function Whiteboard() {
         ...prev,
         end: svgPoint,
       }));
+      return;
+    }
+
+    if (currentCircle && tool === "circle") {
+      const dx = svgPoint.x - currentCircle.center.x;
+      const dy = svgPoint.y - currentCircle.center.y;
+      setCurrentCircle({ ...currentCircle, radius: Math.sqrt(dx * dx + dy * dy) });
       return;
     }
 
@@ -409,6 +452,11 @@ export default function Whiteboard() {
       setCurrentShape(null);
     }
 
+    if (currentCircle) {
+      setActiveBoardElements((prev) => [...prev, currentCircle]);
+      setCurrentCircle(null);
+    }
+
     if (mode === "select" && selectionRect) {
       const finalSelection = new Set();
       activeBoard.elements.forEach((element) => {
@@ -423,13 +471,15 @@ export default function Whiteboard() {
           const el = activeBoard.elements.find((e) => e.id === id);
           if (el.type === "text") {
             return [id, { x: el.x, y: el.y }];
+          } else if (el.type === "circle") {
+            return [id, { center: { ...el.center } }];
           } else if (el.type === "line" || el.type === "arrow") {
             return [id, { x1: el.x1, y1: el.y1, x2: el.x2, y2: el.y2 }];
           }
           return [
             id,
             {
-              points: el.points.map((p) => [...p]),
+              points: el.points ? el.points.map((p) => [...p]) : [],
             },
           ];
         })
@@ -450,33 +500,45 @@ export default function Whiteboard() {
       const el = activeBoard.elements.find((el) => el.id === id);
       if (!el) return;
 
-      let minX, minY, maxX, maxY;
-      if (el.type === "text") {
-        minX = el.x;
-        minY = el.y;
-        maxX = el.x + (el.width || 100);
-        maxY = el.y + (el.fontSize || 20);
+      if (el.type === "circle") {
+        // Fix: store bounding box for circle resizing
+        const minX = el.center.x - el.radius;
+        const maxX = el.center.x + el.radius;
+        elementsData.set(el.id, {
+          originalBoundingBox: { minX, maxX },
+          originalCenter: { ...el.center },
+          originalRadius: el.radius,
+        });
+      } else if (el.type === "text") {
+        let minX = el.x, minY = el.y;
+        let maxX = el.x + (el.width || 100), maxY = el.y + (el.fontSize || 20);
+        elementsData.set(el.id, {
+          originalBoundingBox: { minX, minY, maxX, maxY },
+          originalFontSize: el.fontSize,
+          originalWidth: el.width,
+        });
       } else if (el.type === "line" || el.type === "arrow") {
-        minX = Math.min(el.x1, el.x2);
-        minY = Math.min(el.y1, el.y2);
-        maxX = Math.max(el.x1, el.x2);
-        maxY = Math.max(el.y1, el.y2);
+        let minX = Math.min(el.x1, el.x2);
+        let minY = Math.min(el.y1, el.y2);
+        let maxX = Math.max(el.x1, el.x2);
+        let maxY = Math.max(el.y1, el.y2);
+        elementsData.set(el.id, {
+          originalBoundingBox: { minX, minY, maxX, maxY },
+          x1: el.x1,
+          y1: el.y1,
+          x2: el.x2,
+          y2: el.y2,
+        });
       } else {
-        minX = Math.min(...el.points.map((p) => p[0]));
-        minY = Math.min(...el.points.map((p) => p[1]));
-        maxX = Math.max(...el.points.map((p) => p[0]));
-        maxY = Math.max(...el.points.map((p) => p[1]));
+        let minX = Math.min(...el.points.map((p) => p[0]));
+        let minY = Math.min(...el.points.map((p) => p[1]));
+        let maxX = Math.max(...el.points.map((p) => p[0]));
+        let maxY = Math.max(...el.points.map((p) => p[1]));
+        elementsData.set(el.id, {
+          originalPoints: el.points ? el.points.map((p) => [...p]) : undefined,
+          originalBoundingBox: { minX, minY, maxX, maxY },
+        });
       }
-
-      elementsData.set(el.id, {
-        originalPoints: el.points ? el.points.map((p) => [...p]) : undefined,
-        originalBoundingBox: { minX, minY, maxX, maxY },
-        originalFontSize: el.fontSize,
-        originalWidth: el.width,
-        ...(el.type === "line" || el.type === "arrow"
-          ? { x1: el.x1, y1: el.y1, x2: el.x2, y2: el.y2 }
-          : {}),
-      });
     });
 
     elementStartPositions.current = elementsData;
@@ -548,8 +610,15 @@ export default function Whiteboard() {
       return (
         minX < rect.x2 && maxX > rect.x1 && minY < rect.y2 && maxY > rect.y1
       );
+    } else if (element.type === "circle") {
+      const cx = element.center.x, cy = element.center.y, r = element.radius;
+      return (
+        cx + r >= rect.x1 &&
+        cx - r <= rect.x2 &&
+        cy + r >= rect.y1 &&
+        cy - r <= rect.y2
+      );
     }
-
     return element.points.some(
       ([x, y]) => x >= rect.x1 && x <= rect.x2 && y >= rect.y1 && y <= rect.y2
     );
@@ -662,6 +731,11 @@ export default function Whiteboard() {
         setArrowColor={setArrowColor}
         arrowWidth={arrowWidth}
         setArrowWidth={setArrowWidth}
+        // Pass new circle control props:
+        circleStrokeColor={circleStrokeColor}
+        setCircleStrokeColor={setCircleStrokeColor}
+        circleStrokeWidth={circleStrokeWidth}
+        setCircleStrokeWidth={setCircleStrokeWidth}
       />
 
       <div
@@ -731,25 +805,36 @@ export default function Whiteboard() {
                 />
               ) : element.type === "text" ? (
                 <text
-                  x={element.x}
-                  y={element.y + element.fontSize}
+                  x={`${element.x}`}
+                  y={`${element.y + element.fontSize}`}
                   fill={element.color}
-                  fontSize={element.fontSize}
+                  fontSize={`${element.fontSize}`}
                   className="pointer-events-auto"
                 >
                   {element.content}
                 </text>
               ) : element.type === "line" || element.type === "arrow" ? (
                 <line
-                  x1={element.x1}
-                  y1={element.y1}
-                  x2={element.x2}
-                  y2={element.y2}
+                  x1={`${element.x1}`}
+                  y1={`${element.y1}`}
+                  x2={`${element.x2}`}
+                  y2={`${element.y2}`}
                   stroke={element.color}
-                  strokeWidth={element.strokeWidth}
+                  strokeWidth={`${element.strokeWidth}`}
                   markerEnd={
                     element.type === "arrow" ? "url(#arrowhead)" : undefined
                   }
+                />
+              ) : element.type === "circle" ? (
+                <circle
+                  cx={`${element.center.x}`}
+                  cy={`${element.center.y}`}
+                  r={`${element.radius}`}
+                  stroke={element.color}
+                  strokeWidth={`${element.strokeWidth}`}
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 />
               ) : null}
             </g>
@@ -767,10 +852,10 @@ export default function Whiteboard() {
                 return (
                   <g key={`${element.id}-overlay`}>
                     <rect
-                      x={minX - 5}
-                      y={minY - 5}
-                      width={maxX - minX + 10}
-                      height={maxY - minY + 10}
+                      x={`${minX - 5}`}
+                      y={`${minY - 5}`}
+                      width={`${maxX - minX + 10}`}
+                      height={`${maxY - minY + 10}`}
                       fill="none"
                       stroke="#0070f3"
                       strokeWidth="1"
@@ -792,7 +877,9 @@ export default function Whiteboard() {
                             const el = activeBoard.elements.find(
                               (e) => e.id === id
                             );
-                            if (el.type === "line" || el.type === "arrow") {
+                            if (el.type === "circle") {
+                              return [id, { center: { ...el.center } }];
+                            } else if (el.type === "line" || el.type === "arrow") {
                               return [
                                 id,
                                 { x1: el.x1, y1: el.y1, x2: el.x2, y2: el.y2 },
@@ -822,7 +909,9 @@ export default function Whiteboard() {
                             const el = activeBoard.elements.find(
                               (e) => e.id === id
                             );
-                            if (el.type === "line" || el.type === "arrow") {
+                            if (el.type === "circle") {
+                              return [id, { center: { ...el.center } }];
+                            } else if (el.type === "line" || el.type === "arrow") {
                               return [
                                 id,
                                 { x1: el.x1, y1: el.y1, x2: el.x2, y2: el.y2 },
@@ -889,10 +978,10 @@ export default function Whiteboard() {
                 return (
                   <g key={`${element.id}-overlay`}>
                     <rect
-                      x={element.x - 5}
-                      y={element.y - 5}
-                      width={(element.width || 100) + 10}
-                      height={(element.fontSize || 20) + 10}
+                      x={`${element.x - 5}`}
+                      y={`${element.y - 5}`}
+                      width={`${(element.width || 100) + 10}`}
+                      height={`${(element.fontSize || 20) + 10}`}
                       fill="none"
                       stroke="#0070f3"
                       strokeWidth="1"
@@ -1015,10 +1104,10 @@ export default function Whiteboard() {
                 return (
                   <g key={`${element.id}-overlay`}>
                     <rect
-                      x={Math.min(element.x1, element.x2) - 5}
-                      y={Math.min(element.y1, element.y2) - 5}
-                      width={Math.abs(element.x2 - element.x1) + 10}
-                      height={Math.abs(element.y2 - element.y1) + 10}
+                      x={`${Math.min(element.x1, element.x2) - 5}`}
+                      y={`${Math.min(element.y1, element.y2) - 5}`}
+                      width={`${Math.abs(element.x2 - element.x1) + 10}`}
+                      height={`${Math.abs(element.y2 - element.y1) + 10}`}
                       fill="none"
                       stroke="#0070f3"
                       strokeWidth="1"
@@ -1042,7 +1131,9 @@ export default function Whiteboard() {
                             const el = activeBoard.elements.find(
                               (e) => e.id === id
                             );
-                            if (el.type === "line" || el.type === "arrow") {
+                            if (el.type === "circle") {
+                              return [id, { center: { ...el.center } }];
+                            } else if (el.type === "line" || el.type === "arrow") {
                               return [
                                 id,
                                 { x1: el.x1, y1: el.y1, x2: el.x2, y2: el.y2 },
@@ -1072,7 +1163,9 @@ export default function Whiteboard() {
                             const el = activeBoard.elements.find(
                               (e) => e.id === id
                             );
-                            if (el.type === "line" || el.type === "arrow") {
+                            if (el.type === "circle") {
+                              return [id, { center: { ...el.center } }];
+                            } else if (el.type === "line" || el.type === "arrow") {
                               return [
                                 id,
                                 { x1: el.x1, y1: el.y1, x2: el.x2, y2: el.y2 },
@@ -1137,6 +1230,115 @@ export default function Whiteboard() {
                     </g>
                   </g>
                 );
+              } else if (element.type === "circle") {
+                const cx = element.center.x, cy = element.center.y, r = element.radius;
+                return (
+                  <g key={`${element.id}-overlay`}>
+                    <rect
+                      x={`${cx - r - 5}`}
+                      y={`${cy - r - 5}`}
+                      width={`${2 * r + 10}`}
+                      height={`${2 * r + 10}`}
+                      fill="none"
+                      stroke="#0070f3"
+                      strokeWidth="1"
+                      strokeDasharray="4 2"
+                    />
+                    {/* Move icon */}
+                    <g
+                      transform={`translate(${cx + r + 10}, ${cy - r - 10})`}
+                      style={{ cursor: "move" }}
+                      onMouseDown={(e) => {
+                        e.stopPropagation();
+                        setIsMoveIconDragging(true);
+                        dragStartPos.current = getSVGPoint(e.clientX, e.clientY);
+                        elementStartPositions.current = new Map(
+                          Array.from(selectedElements).map((id) => {
+                            const el = activeBoard.elements.find((e) => e.id === id);
+                            if (!el) return [id, {}];
+                            
+                            if (el.type === "circle") {
+                              return [id, { center: { ...el.center } }];
+                            } else if (el.type === "text") {
+                              return [id, { x: el.x, y: el.y }];
+                            } else if (el.type === "line" || el.type === "arrow") {
+                              return [id, { x1: el.x1, y1: el.y1, x2: el.x2, y2: el.y2 }];
+                            } else if (el.points) {
+                              return [id, { points: el.points.map(p => [...p]) }];
+                            }
+                            return [id, {}];
+                          })
+                        );
+                      }}
+                      onTouchStart={(e) => {
+                        e.stopPropagation();
+                        setIsMoveIconDragging(true);
+                        const touch = e.touches[0];
+                        dragStartPos.current = getSVGPoint(touch.clientX, touch.clientY);
+                        elementStartPositions.current = new Map(
+                          Array.from(selectedElements).map((id) => {
+                            const el = activeBoard.elements.find((e) => e.id === id);
+                            if (!el) return [id, {}];
+                            
+                            if (el.type === "circle") {
+                              return [id, { center: { ...el.center } }];
+                            } else if (el.type === "text") {
+                              return [id, { x: el.x, y: el.y }];
+                            } else if (el.type === "line" || el.type === "arrow") {
+                              return [id, { x1: el.x1, y1: el.y1, x2: el.x2, y2: el.y2 }];
+                            } else if (el.points) {
+                              return [id, { points: el.points.map(p => [...p]) }];
+                            }
+                            return [id, {}];
+                          })
+                        );
+                      }}
+                    >
+                      <circle
+                        cx={0}
+                        cy={0}
+                        r="12"
+                        fill="white"
+                        stroke="#0070f3"
+                        strokeWidth="2"
+                      />
+                      <g transform="translate(-10, -10)">
+                        <LuMove color="#0070f3" size={20} />
+                      </g>
+                    </g>
+                    {/* Resize icon */}
+                    <g
+                      transform={`translate(${cx + r + 10}, ${cy + r + 10})`}
+                      style={{ cursor: "nwse-resize" }}
+                      onMouseDown={(e) => {
+                        e.stopPropagation();
+                        handleResizeStart(e);
+                      }}
+                      onTouchStart={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const touch = e.touches[0];
+                        handleResizeStart({
+                          ...e,
+                          clientX: touch.clientX,
+                          clientY: touch.clientY,
+                        });
+                      }}
+                    >
+                      <circle
+                        cx={0}
+                        cy={0}
+                        r="12"
+                        fill="white"
+                        stroke="#0070f3"
+                        strokeWidth="2"
+                      />
+                      <g transform="translate(-10, -10)">
+                        <LuMoveDiagonal2 color="#0070f3" size={20} />
+                      </g>
+                    </g>
+                  </g>
+                );
               }
             })}
 
@@ -1156,25 +1358,39 @@ export default function Whiteboard() {
           {/* Draw current shape preview */}
           {currentShape && (
             <line
-              x1={currentShape.start.x}
-              y1={currentShape.start.y}
-              x2={currentShape.end.x}
-              y2={currentShape.end.y}
+              x1={`${currentShape.start.x}`}
+              y1={`${currentShape.start.y}`}
+              x2={`${currentShape.end.x}`}
+              y2={`${currentShape.end.y}`}
               stroke={currentShape.color}
-              strokeWidth={currentShape.strokeWidth}
+              strokeWidth={`${currentShape.strokeWidth}`}
               markerEnd={
                 currentShape.type === "arrow" ? "url(#arrowhead)" : undefined
               }
             />
           )}
 
+          {/* Draw current circle preview */}
+          {currentCircle && (
+            <circle
+              cx={`${currentCircle.center.x}`}
+              cy={`${currentCircle.center.y}`}
+              r={`${currentCircle.radius}`}
+              stroke={currentCircle.color}
+              strokeWidth={`${currentCircle.strokeWidth}`}
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          )}
+
           {/* Draw selection rectangle */}
           {selectionRect && (
             <rect
-              x={selectionRect.x1}
-              y={selectionRect.y1}
-              width={selectionRect.x2 - selectionRect.x1}
-              height={selectionRect.y2 - selectionRect.y1}
+              x={`${selectionRect.x1}`}
+              y={`${selectionRect.y1}`}
+              width={`${selectionRect.x2 - selectionRect.x1}`}
+              height={`${selectionRect.y2 - selectionRect.y1}`}
               fill="rgba(0, 112, 243, 0.1)"
               stroke="#0070f3"
               strokeWidth="1"
