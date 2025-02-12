@@ -134,7 +134,7 @@ const Toolbar = ({
     >
       {activeBoard.pdfUrl ? (
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 md:gap-2">
             <h1 className="text-lg font-bold truncate max-w-[150px] md:max-w-xs">
               {activeBoard.pdfUrl.split("/").pop()}
             </h1>
@@ -153,7 +153,7 @@ const Toolbar = ({
               isActive={false}
             />
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 md:gap-2">
             <label
               title="Upload PDF"
               className={`hidden md:inline-flex cursor-pointer items-center justify-center w-8 h-8 rounded-full shadow transition ${
@@ -210,7 +210,7 @@ const Toolbar = ({
         </div>
       ) : (
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 md:gap-2">
             <ToolbarButton
               onClick={switchToWriteMode}
               title="Write"
@@ -234,7 +234,7 @@ const Toolbar = ({
             {mode === "write" && (
               <>
                 {/* Desktop: show tool buttons in the toolbar */}
-                <div className="hidden md:flex items-center gap-2">
+                <div className="hidden md:flex items-center gap-1 md:gap-2">
                   <ToolbarButton
                     onClick={() => setTool("pen")}
                     title="Pen"
@@ -290,7 +290,7 @@ const Toolbar = ({
             )}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 md:gap-2">
             <label
               title="Upload PDF"
               className={`hidden md:inline-flex cursor-pointer items-center justify-center w-8 h-8 rounded-full shadow transition ${
@@ -354,7 +354,7 @@ const Toolbar = ({
           } p-2 rounded-lg shadow`}
         >
           {/* Mobile: show tool buttons inside tool options */}
-          <div className="flex md:hidden items-center gap-2">
+          <div className="flex md:hidden items-center gap-1 md:gap-2">
             <ToolbarButton
               onClick={() => setTool("pen")}
               title="Pen"
@@ -400,7 +400,7 @@ const Toolbar = ({
             />
           </div>
           {tool === "pen" && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 md:gap-2">
               <label
                 className={`text-xs font-medium ${
                   darkMode ? "text-gray-200" : "text-gray-700"
@@ -431,7 +431,7 @@ const Toolbar = ({
             </div>
           )}
           {tool === "highlight" && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 md:gap-2">
               <label
                 className={`text-xs font-medium ${
                   darkMode ? "text-gray-200" : "text-gray-700"
@@ -462,7 +462,7 @@ const Toolbar = ({
             </div>
           )}
           {tool === "text" && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 md:gap-2">
               <label className="text-xs font-medium text-gray-700 dark:text-gray-200">
                 Color:
               </label>
@@ -500,7 +500,7 @@ const Toolbar = ({
             </div>
           )}
           {tool === "line" && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 md:gap-2">
               <label
                 className={`text-xs font-medium ${
                   darkMode ? "text-gray-200" : "text-gray-700"
@@ -531,7 +531,7 @@ const Toolbar = ({
             </div>
           )}
           {tool === "arrow" && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 md:gap-2">
               <label
                 className={`text-xs font-medium ${
                   darkMode ? "text-gray-200" : "text-gray-700"
@@ -562,7 +562,7 @@ const Toolbar = ({
             </div>
           )}
           {tool === "circle" && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 md:gap-2">
               <label
                 className={`text-xs font-medium ${
                   darkMode ? "text-gray-200" : "text-gray-700"
@@ -593,7 +593,7 @@ const Toolbar = ({
             </div>
           )}
           {tool === "roundedRect" && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 md:gap-2">
               <label
                 className={`text-xs font-medium ${
                   darkMode ? "text-gray-200" : "text-gray-700"
