@@ -68,6 +68,14 @@ const Toolbar = ({
   setCircleStrokeColor,
   circleStrokeWidth,
   setCircleStrokeWidth,
+  // New props for rounded rectangle controls:
+  roundedRectRadius,
+  setRoundedRectRadius,
+  // New props for rectangle border controls:
+  roundedRectColor,
+  setRoundedRectColor,
+  roundedRectStrokeWidth,
+  setRoundedRectStrokeWidth,
 }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [showToolOptions, setShowToolOptions] = useState(false);
@@ -264,6 +272,12 @@ const Toolbar = ({
                     icon={LuCircle}
                     isActive={tool === "circle"}
                   />
+                  <ToolbarButton
+                    onClick={() => setTool("roundedRect")}
+                    title="Rounded Rectangle"
+                    icon={LuSquare}
+                    isActive={tool === "roundedRect"}
+                  />
                 </div>
                 {/* Always show tool options toggle */}
                 <ToolbarButton
@@ -375,8 +389,14 @@ const Toolbar = ({
             <ToolbarButton
               onClick={() => setTool("circle")}
               title="Circle"
-              icon={() => <span style={{ fontSize: 16 }}>○</span>}
+              icon={LuCircle}
               isActive={tool === "circle"}
+            />
+            <ToolbarButton
+              onClick={() => setTool("roundedRect")}
+              title="Rounded Rectangle"
+              icon={LuSquare}
+              isActive={tool === "roundedRect"}
             />
           </div>
           {tool === "pen" && (
@@ -568,6 +588,53 @@ const Toolbar = ({
                 min="1"
                 value={circleStrokeWidth}
                 onChange={(e) => setCircleStrokeWidth(Number(e.target.value))}
+                className="w-12 text-xs border rounded-full px-1 py-0.5 text-black"
+              />
+            </div>
+          )}
+          {tool === "roundedRect" && (
+            <div className="flex items-center gap-2">
+              <label
+                className={`text-xs font-medium ${
+                  darkMode ? "text-gray-200" : "text-gray-700"
+                }`}
+              >
+                Corner Radius:
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={roundedRectRadius}
+                onChange={(e) => setRoundedRectRadius(Number(e.target.value))}
+                className="w-12 text-xs border rounded-full px-1 py-0.5 text-black"
+              />
+              <label
+                className={`text-xs font-medium ${
+                  darkMode ? "text-gray-200" : "text-gray-700"
+                }`}
+              >
+                Rect Color:
+              </label>
+              <input
+                type="color"
+                value={roundedRectColor}
+                onChange={(e) => setRoundedRectColor(e.target.value)}
+                className="w-6 h-6 border-none bg-transparent rounded-full"
+              />
+              <label
+                className={`text-xs font-medium ${
+                  darkMode ? "text-gray-200" : "text-gray-700"
+                }`}
+              >
+                Border Size:
+              </label>
+              <input
+                type="number"
+                min="1"
+                value={roundedRectStrokeWidth}
+                onChange={(e) =>
+                  setRoundedRectStrokeWidth(Number(e.target.value))
+                }
                 className="w-12 text-xs border rounded-full px-1 py-0.5 text-black"
               />
             </div>
