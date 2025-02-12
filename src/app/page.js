@@ -150,6 +150,36 @@ export default function Whiteboard() {
     }
   };
 
+  // Add this helper function at the top level of your component
+  const moveIconHandler = (clientX, clientY) => {
+    setIsMoveIconDragging(true);
+    dragStartPos.current = getSVGPoint(clientX, clientY);
+    
+    elementStartPositions.current = new Map(
+      Array.from(selectedElements).map((id) => {
+        const el = activeBoard.elements.find((e) => e.id === id);
+        if (!el) return [id, {}];
+  
+        switch (el.type) {
+          case "circle":
+            return [id, { center: { ...el.center } }];
+          case "roundedRect":
+            return [id, { x: el.x, y: el.y }];
+          case "line":
+          case "arrow":
+            return [id, { x1: el.x1, y1: el.y1, x2: el.x2, y2: el.y2 }];
+          case "text":
+            return [id, { x: el.x, y: el.y }];
+          default:
+            if (el.points) {
+              return [id, { points: el.points.map(p => [...p]) }];
+            }
+            return [id, {}];
+        }
+      })
+    );
+  };
+
   // Event handlers
   const handleMouseDown = (e) => {
     const svgPoint = getSVGPoint(e.clientX, e.clientY);
@@ -275,56 +305,62 @@ export default function Whiteboard() {
     }
   };
 
+  // Replace the handleMouseMove dragging section with this:
   const handleMouseMove = (e) => {
     const svgPoint = getSVGPoint(e.clientX, e.clientY);
 
     if (isMoveIconDragging) {
       const deltaX = svgPoint.x - dragStartPos.current.x;
       const deltaY = svgPoint.y - dragStartPos.current.y;
+      
       setActiveBoardElements((prev) =>
         prev.map((el) => {
           if (!selectedElements.has(el.id)) return el;
+          
           const startPos = elementStartPositions.current.get(el.id);
           if (!startPos) return el;
-          if (el.type === "circle" && startPos.center) {
-            return {
-              ...el,
-              center: {
-                x: startPos.center.x + deltaX,
-                y: startPos.center.y + deltaY,
-              },
-            };
-          } else if (el.type === "roundedRect") {
-            return {
-              ...el,
-              x: startPos.x + deltaX,
-              y: startPos.y + deltaY,
-            };
-          } else if (
-            (el.type === "line" || el.type === "arrow") &&
-            startPos.x1 != null
-          ) {
-            return {
-              ...el,
-              x1: startPos.x1 + deltaX,
-              y1: startPos.y1 + deltaY,
-              x2: startPos.x2 + deltaX,
-              y2: startPos.y2 + deltaY,
-            };
-          } else if (el.type === "text") {
-            return {
-              ...el,
-              x: startPos.x + deltaX,
-              y: startPos.y + deltaY,
-            };
-          } else if (el.points && startPos.points) {
-            const newPoints = startPos.points.map(([x, y]) => [
-              x + deltaX,
-              y + deltaY,
-            ]);
-            return { ...el, points: newPoints };
-          } else {
-            return el;
+  
+          switch (el.type) {
+            case "circle":
+              return {
+                ...el,
+                center: {
+                  x: startPos.center.x + deltaX,
+                  y: startPos.center.y + deltaY,
+                }
+              };
+            case "roundedRect":
+              return {
+                ...el,
+                x: startPos.x + deltaX,
+                y: startPos.y + deltaY,
+              };
+            case "line":
+            case "arrow":
+              return {
+                ...el,
+                x1: startPos.x1 + deltaX,
+                y1: startPos.y1 + deltaY,
+                x2: startPos.x2 + deltaX,
+                y2: startPos.y2 + deltaY,
+              };
+            case "text":
+              return {
+                ...el,
+                x: startPos.x + deltaX,
+                y: startPos.y + deltaY,
+              };
+            default:
+              if (el.points && startPos.points) {
+                return {
+                  ...el,
+                  points: startPos.points.map(([x, y]) => [
+                    x + deltaX,
+                    y + deltaY,
+                  ]),
+                };
+              }
+              return el;
           }
         })
       );
@@ -995,72 +1031,12 @@ export default function Whiteboard() {
                       style={{ cursor: "move" }}
                       onMouseDown={(e) => {
                         e.stopPropagation();
-                        setIsMoveIconDragging(true);
-                        dragStartPos.current = getSVGPoint(
-                          e.clientX,
-                          e.clientY
-                        );
-                        elementStartPositions.current = new Map(
-                          Array.from(selectedElements).map((id) => {
-                            const el = activeBoard.elements.find(
-                              (e) => e.id === id
-                            );
-                            if (el.type === "circle") {
-                              return [id, { center: { ...el.center } }];
-                            } else if (
-                              el.type === "line" ||
-                              el.type === "arrow"
-                            ) {
-                              return [
-                                id,
-                                { x1: el.x1, y1: el.y1, x2: el.x2, y2: el.y2 },
-                              ];
-                            }
-                            return [
-                              id,
-                              {
-                                x: el.x || (el.points && el.points[0][0]),
-                                y: el.y || (el.points && el.points[0][1]),
-                                points: el.points?.map((p) => [...p]),
-                              },
-                            ];
-                          })
-                        );
+                        moveIconHandler(e.clientX, e.clientY);
                       }}
                       onTouchStart={(e) => {
                         e.stopPropagation();
-                        setIsMoveIconDragging(true);
                         const touch = e.touches[0];
-                        dragStartPos.current = getSVGPoint(
-                          touch.clientX,
-                          touch.clientY
-                        );
-                        elementStartPositions.current = new Map(
-                          Array.from(selectedElements).map((id) => {
-                            const el = activeBoard.elements.find(
-                              (e) => e.id === id
-                            );
-                            if (el.type === "circle") {
-                              return [id, { center: { ...el.center } }];
-                            } else if (
-                              el.type === "line" ||
-                              el.type === "arrow"
-                            ) {
-                              return [
-                                id,
-                                { x1: el.x1, y1: el.y1, x2: el.x2, y2: el.y2 },
-                              ];
-                            }
-                            return [
-                              id,
-                              {
-                                x: el.x || (el.points && el.points[0][0]),
-                                y: el.y || (el.points && el.points[0][1]),
-                                points: el.points?.map((p) => [...p]),
-                              },
-                            ];
-                          })
-                        );
+                        moveIconHandler(touch.clientX, touch.clientY);
                       }}
                     >
                       <circle
@@ -1129,62 +1105,12 @@ export default function Whiteboard() {
                       style={{ cursor: "move" }}
                       onMouseDown={(e) => {
                         e.stopPropagation();
-                        setIsMoveIconDragging(true);
-                        dragStartPos.current = getSVGPoint(
-                          e.clientX,
-                          e.clientY
-                        );
-                        elementStartPositions.current = new Map(
-                          Array.from(selectedElements).map((id) => {
-                            const el = activeBoard.elements.find(
-                              (e) => e.id === id
-                            );
-                            if (el.type === "line" || el.type === "arrow") {
-                              return [
-                                id,
-                                { x1: el.x1, y1: el.y1, x2: el.x2, y2: el.y2 },
-                              ];
-                            }
-                            return [
-                              id,
-                              {
-                                x: el.x || (el.points && el.points[0][0]),
-                                y: el.y || (el.points && el.points[0][1]),
-                                points: el.points?.map((p) => [...p]),
-                              },
-                            ];
-                          })
-                        );
+                        moveIconHandler(e.clientX, e.clientY);
                       }}
                       onTouchStart={(e) => {
                         e.stopPropagation();
-                        setIsMoveIconDragging(true);
                         const touch = e.touches[0];
-                        dragStartPos.current = getSVGPoint(
-                          touch.clientX,
-                          touch.clientY
-                        );
-                        elementStartPositions.current = new Map(
-                          Array.from(selectedElements).map((id) => {
-                            const el = activeBoard.elements.find(
-                              (e) => e.id === id
-                            );
-                            if (el.type === "line" || el.type === "arrow") {
-                              return [
-                                id,
-                                { x1: el.x1, y1: el.y1, x2: el.x2, y2: el.y2 },
-                              ];
-                            }
-                            return [
-                              id,
-                              {
-                                x: el.x || (el.points && el.points[0][0]),
-                                y: el.y || (el.points && el.points[0][1]),
-                                points: el.points?.map((p) => [...p]),
-                              },
-                            ];
-                          })
-                        );
+                        moveIconHandler(touch.clientX, touch.clientY);
                       }}
                     >
                       <circle
@@ -1255,72 +1181,12 @@ export default function Whiteboard() {
                       style={{ cursor: "move" }}
                       onMouseDown={(e) => {
                         e.stopPropagation();
-                        setIsMoveIconDragging(true);
-                        dragStartPos.current = getSVGPoint(
-                          e.clientX,
-                          e.clientY
-                        );
-                        elementStartPositions.current = new Map(
-                          Array.from(selectedElements).map((id) => {
-                            const el = activeBoard.elements.find(
-                              (e) => e.id === id
-                            );
-                            if (el.type === "circle") {
-                              return [id, { center: { ...el.center } }];
-                            } else if (
-                              el.type === "line" ||
-                              el.type === "arrow"
-                            ) {
-                              return [
-                                id,
-                                { x1: el.x1, y1: el.y1, x2: el.x2, y2: el.y2 },
-                              ];
-                            }
-                            return [
-                              id,
-                              {
-                                x: el.x || (el.points && el.points[0][0]),
-                                y: el.y || (el.points && el.points[0][1]),
-                                points: el.points?.map((p) => [...p]),
-                              },
-                            ];
-                          })
-                        );
+                        moveIconHandler(e.clientX, e.clientY);
                       }}
                       onTouchStart={(e) => {
                         e.stopPropagation();
-                        setIsMoveIconDragging(true);
                         const touch = e.touches[0];
-                        dragStartPos.current = getSVGPoint(
-                          touch.clientX,
-                          touch.clientY
-                        );
-                        elementStartPositions.current = new Map(
-                          Array.from(selectedElements).map((id) => {
-                            const el = activeBoard.elements.find(
-                              (e) => e.id === id
-                            );
-                            if (el.type === "circle") {
-                              return [id, { center: { ...el.center } }];
-                            } else if (
-                              el.type === "line" ||
-                              el.type === "arrow"
-                            ) {
-                              return [
-                                id,
-                                { x1: el.x1, y1: el.y1, x2: el.x2, y2: el.y2 },
-                              ];
-                            }
-                            return [
-                              id,
-                              {
-                                x: el.x || (el.points && el.points[0][0]),
-                                y: el.y || (el.points && el.points[0][1]),
-                                points: el.points?.map((p) => [...p]),
-                              },
-                            ];
-                          })
-                        );
+                        moveIconHandler(touch.clientX, touch.clientY);
                       }}
                     >
                       <circle
@@ -1392,76 +1258,12 @@ export default function Whiteboard() {
                       style={{ cursor: "move" }}
                       onMouseDown={(e) => {
                         e.stopPropagation();
-                        setIsMoveIconDragging(true);
-                        dragStartPos.current = getSVGPoint(
-                          e.clientX,
-                          e.clientY
-                        );
-                        elementStartPositions.current = new Map(
-                          Array.from(selectedElements).map((id) => {
-                            const el = activeBoard.elements.find(
-                              (e) => e.id === id
-                            );
-                            if (!el) return [id, {}];
-
-                            if (el.type === "circle") {
-                              return [id, { center: { ...el.center } }];
-                            } else if (el.type === "text") {
-                              return [id, { x: el.x, y: el.y }];
-                            } else if (
-                              el.type === "line" ||
-                              el.type === "arrow"
-                            ) {
-                              return [
-                                id,
-                                { x1: el.x1, y1: el.y1, x2: el.x2, y2: el.y2 },
-                              ];
-                            } else if (el.points) {
-                              return [
-                                id,
-                                { points: el.points.map((p) => [...p]) },
-                              ];
-                            }
-                            return [id, {}];
-                          })
-                        );
+                        moveIconHandler(e.clientX, e.clientY);
                       }}
                       onTouchStart={(e) => {
                         e.stopPropagation();
-                        setIsMoveIconDragging(true);
                         const touch = e.touches[0];
-                        dragStartPos.current = getSVGPoint(
-                          touch.clientX,
-                          touch.clientY
-                        );
-                        elementStartPositions.current = new Map(
-                          Array.from(selectedElements).map((id) => {
-                            const el = activeBoard.elements.find(
-                              (e) => e.id === id
-                            );
-                            if (!el) return [id, {}];
-
-                            if (el.type === "circle") {
-                              return [id, { center: { ...el.center } }];
-                            } else if (el.type === "text") {
-                              return [id, { x: el.x, y: el.y }];
-                            } else if (
-                              el.type === "line" ||
-                              el.type === "arrow"
-                            ) {
-                              return [
-                                id,
-                                { x1: el.x1, y1: el.y1, x2: el.x2, y2: el.y2 },
-                              ];
-                            } else if (el.points) {
-                              return [
-                                id,
-                                { points: el.points.map((p) => [...p]) },
-                              ];
-                            }
-                            return [id, {}];
-                          })
-                        );
+                        moveIconHandler(touch.clientX, touch.clientY);
                       }}
                     >
                       <circle
@@ -1516,22 +1318,7 @@ export default function Whiteboard() {
                     key={`${element.id}-overlay`}
                     onMouseDown={(e) => {
                       e.stopPropagation();
-                      setIsMoveIconDragging(true);
-                      dragStartPos.current = getSVGPoint(e.clientX, e.clientY);
-                      elementStartPositions.current = new Map(
-                        Array.from(selectedElements).map((id) => {
-                          const el = activeBoard.elements.find(
-                            (e) => e.id === id
-                          );
-                          return [
-                            id,
-                            {
-                              x: el.x,
-                              y: el.y,
-                            },
-                          ];
-                        })
-                      );
+                      moveIconHandler(e.clientX, e.clientY);
                     }}
                   >
                     <rect
@@ -1552,49 +1339,12 @@ export default function Whiteboard() {
                       style={{ cursor: "move" }}
                       onMouseDown={(e) => {
                         e.stopPropagation();
-                        setIsMoveIconDragging(true);
-                        dragStartPos.current = getSVGPoint(
-                          e.clientX,
-                          e.clientY
-                        );
-                        // ...existing logic for storing start positions...
-                        elementStartPositions.current = new Map(
-                          Array.from(selectedElements).map((id) => {
-                            const el = activeBoard.elements.find(
-                              (e) => e.id === id
-                            );
-                            return [
-                              id,
-                              {
-                                x: el.x,
-                                y: el.y,
-                              },
-                            ];
-                          })
-                        );
+                        moveIconHandler(e.clientX, e.clientY);
                       }}
                       onTouchStart={(e) => {
                         e.stopPropagation();
-                        setIsMoveIconDragging(true);
                         const touch = e.touches[0];
-                        dragStartPos.current = getSVGPoint(
-                          touch.clientX,
-                          touch.clientY
-                        );
-                        elementStartPositions.current = new Map(
-                          Array.from(selectedElements).map((id) => {
-                            const el = activeBoard.elements.find(
-                              (e) => e.id === id
-                            );
-                            return [
-                              id,
-                              {
-                                x: el.x,
-                                y: el.y,
-                              },
-                            ];
-                          })
-                        );
+                        moveIconHandler(touch.clientX, touch.clientY);
                       }}
                     >
                       <circle
