@@ -1573,6 +1573,29 @@ export default function Whiteboard() {
                           })
                         );
                       }}
+                      onTouchStart={(e) => {
+                        e.stopPropagation();
+                        setIsMoveIconDragging(true);
+                        const touch = e.touches[0];
+                        dragStartPos.current = getSVGPoint(
+                          touch.clientX,
+                          touch.clientY
+                        );
+                        elementStartPositions.current = new Map(
+                          Array.from(selectedElements).map((id) => {
+                            const el = activeBoard.elements.find(
+                              (e) => e.id === id
+                            );
+                            return [
+                              id,
+                              {
+                                x: el.x,
+                                y: el.y,
+                              },
+                            ];
+                          })
+                        );
+                      }}
                     >
                       <circle
                         cx={0}
@@ -1593,6 +1616,19 @@ export default function Whiteboard() {
                       }, ${element.y + element.height + 10})`}
                       style={{ cursor: "nwse-resize" }}
                       onMouseDown={(e) => handleResizeStart(e, element)}
+                      onTouchStart={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const touch = e.touches[0];
+                        handleResizeStart(
+                          {
+                            ...e,
+                            clientX: touch.clientX,
+                            clientY: touch.clientY,
+                          },
+                          element
+                        );
+                      }}
                     >
                       <circle
                         cx={0}
