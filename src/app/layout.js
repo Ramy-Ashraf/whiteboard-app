@@ -14,6 +14,9 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: "Whiteboard",
   description: "A simple whiteboard app",
+  icons: {
+    icon: "~/favicon.ico", 
+  },
 };
 
 export default function RootLayout({ children }) {
