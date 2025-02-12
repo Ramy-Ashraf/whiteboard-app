@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useState } from "react";
+import { useState, memo, useMemo } from "react";
 import {
   LuPenTool,
   LuMousePointer,
@@ -20,6 +20,36 @@ import {
 } from "react-icons/lu";
 import { motion } from "framer-motion";
 
+// Memoize button styles
+const darkModeStyles = {
+  base: "bg-gray-700 text-gray-200 hover:bg-gray-600",
+  light: "bg-white text-gray-700 hover:bg-gray-100",
+};
+
+// Memoize ToolbarButton component
+const ToolbarButton = memo(({ onClick, title, icon: Icon, isActive, darkMode }) => {
+  const buttonStyle = useMemo(() => `flex items-center justify-center w-8 h-8 rounded-full shadow transition ${
+    isActive
+      ? "bg-blue-600 text-white"
+      : darkMode
+      ? darkModeStyles.base
+      : darkModeStyles.light
+  }`, [isActive, darkMode]);
+
+  return (
+    <motion.button
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+      onClick={onClick}
+      title={title}
+      className={buttonStyle}
+    >
+      <Icon size={16} />
+    </motion.button>
+  );
+});
+
+// Main component
 const Toolbar = ({
   activeBoard,
   activeBoardId,
@@ -108,24 +138,6 @@ const Toolbar = ({
     </motion.button>
   );
 
-  const ToolbarButton = ({ onClick, title, icon: Icon, isActive }) => (
-    <motion.button
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
-      onClick={onClick}
-      title={title}
-      className={`flex items-center justify-center w-8 h-8 rounded-full shadow transition ${
-        isActive
-          ? "bg-blue-600 text-white"
-          : darkMode
-          ? "bg-gray-700 text-gray-200 hover:bg-gray-600"
-          : "bg-white text-gray-700 hover:bg-gray-100"
-      }`}
-    >
-      <Icon size={16} />
-    </motion.button>
-  );
-
   return (
     <div
       className={`mb-2 py-2 px-4 ${
@@ -151,6 +163,7 @@ const Toolbar = ({
               title="Exit Upload"
               icon={LuX}
               isActive={false}
+              darkMode={darkMode}
             />
           </div>
           <div className="flex items-center gap-1 md:gap-2">
@@ -198,12 +211,14 @@ const Toolbar = ({
               title="Delete Board"
               icon={LuTrash}
               isActive={false}
+              darkMode={darkMode}
             />
             <ToolbarButton
               onClick={() => setDarkMode((prev) => !prev)}
               title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
               icon={darkMode ? LuSun : LuMoon}
               isActive={false}
+              darkMode={darkMode}
             />
             {RecordingButton}
           </div>
@@ -216,12 +231,14 @@ const Toolbar = ({
               title="Write"
               icon={LuPenTool}
               isActive={mode === "write"}
+              darkMode={darkMode}
             />
             <ToolbarButton
               onClick={() => setMode("select")}
               title="Select"
               icon={LuMousePointer}
               isActive={mode === "select"}
+              darkMode={darkMode}
             />
             {mode === "select" && selectedElements.size > 0 && (
               <ToolbarButton
@@ -229,6 +246,7 @@ const Toolbar = ({
                 title="Delete"
                 icon={LuX}
                 isActive={false}
+                darkMode={darkMode}
               />
             )}
             {mode === "write" && (
@@ -240,18 +258,21 @@ const Toolbar = ({
                     title="Pen"
                     icon={LuBrush}
                     isActive={tool === "pen"}
+                    darkMode={darkMode}
                   />
                   <ToolbarButton
                     onClick={() => setTool("highlight")}
                     title="Highlight"
                     icon={LuHighlighter}
                     isActive={tool === "highlight"}
+                    darkMode={darkMode}
                   />
                   <ToolbarButton
                     onClick={() => setTool("text")}
                     title="Text"
                     icon={LuType}
                     isActive={tool === "text"}
+                    darkMode={darkMode}
                   />
                   {/* New shape tools */}
                   <ToolbarButton
@@ -259,24 +280,28 @@ const Toolbar = ({
                     title="Line"
                     icon={LuSlash}
                     isActive={tool === "line"}
+                    darkMode={darkMode}
                   />
                   <ToolbarButton
                     onClick={() => setTool("arrow")}
                     title="Arrow"
                     icon={LuArrowRight}
                     isActive={tool === "arrow"}
+                    darkMode={darkMode}
                   />
                   <ToolbarButton
                     onClick={() => setTool("circle")}
                     title="Circle"
                     icon={LuCircle}
                     isActive={tool === "circle"}
+                    darkMode={darkMode}
                   />
                   <ToolbarButton
                     onClick={() => setTool("roundedRect")}
                     title="Rounded Rectangle"
                     icon={LuSquare}
                     isActive={tool === "roundedRect"}
+                    darkMode={darkMode}
                   />
                 </div>
                 {/* Always show tool options toggle */}
@@ -285,6 +310,7 @@ const Toolbar = ({
                   title="Tool Options"
                   icon={LuChevronDown}
                   isActive={showToolOptions}
+                  darkMode={darkMode}
                 />
               </>
             )}
@@ -335,12 +361,14 @@ const Toolbar = ({
               title="Delete Board"
               icon={LuTrash}
               isActive={false}
+              darkMode={darkMode}
             />
             <ToolbarButton
               onClick={() => setDarkMode((prev) => !prev)}
               title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
               icon={darkMode ? LuSun : LuMoon}
               isActive={false}
+              darkMode={darkMode}
             />
             {RecordingButton}
           </div>
@@ -360,18 +388,21 @@ const Toolbar = ({
               title="Pen"
               icon={LuBrush}
               isActive={tool === "pen"}
+              darkMode={darkMode}
             />
             <ToolbarButton
               onClick={() => setTool("highlight")}
               title="Highlight"
               icon={LuHighlighter}
               isActive={tool === "highlight"}
+              darkMode={darkMode}
             />
             <ToolbarButton
               onClick={() => setTool("text")}
               title="Text"
               icon={LuType}
               isActive={tool === "text"}
+              darkMode={darkMode}
             />
             {/* New shape tools for mobile */}
             <ToolbarButton
@@ -379,24 +410,28 @@ const Toolbar = ({
               title="Line"
               icon={LuSlash}
               isActive={tool === "line"}
+              darkMode={darkMode}
             />
             <ToolbarButton
               onClick={() => setTool("arrow")}
               title="Arrow"
               icon={LuArrowRight}
               isActive={tool === "arrow"}
+              darkMode={darkMode}
             />
             <ToolbarButton
               onClick={() => setTool("circle")}
               title="Circle"
               icon={LuCircle}
               isActive={tool === "circle"}
+              darkMode={darkMode}
             />
             <ToolbarButton
               onClick={() => setTool("roundedRect")}
               title="Rounded Rectangle"
               icon={LuSquare}
               isActive={tool === "roundedRect"}
+              darkMode={darkMode}
             />
           </div>
           {tool === "pen" && (
@@ -645,4 +680,4 @@ const Toolbar = ({
   );
 };
 
-export default Toolbar;
+export default memo(Toolbar);
