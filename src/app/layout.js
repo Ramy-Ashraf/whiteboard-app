@@ -14,12 +14,25 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: "Whiteboard",
   description: "A simple whiteboard app",
+  icons: {
+    icon: "~/favicon.png", 
+  },
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <link rel="icon" href="/favicon.ico" sizes="any" />
+      <head>
+        <title>{metadata.title}</title>
+        <meta name="description" content={metadata.description} />
+        <link
+          rel="icon"
+          type="image/png"
+          href={metadata.icons.icon}
+        />
+        <style>{geistSans.styles}</style>
+        <style>{geistMono.styles}</style>
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
