@@ -15,7 +15,7 @@ export const metadata = {
   title: "Whiteboard",
   description: "A simple whiteboard app",
   icons: {
-    icon: "~/favicon.png", 
+    icon: "/favicon.png", // Updated to use favicon from the public folder
   },
 };
 
