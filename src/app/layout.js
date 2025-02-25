@@ -14,9 +14,6 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: "Whiteboard",
   description: "A simple whiteboard app",
-  icons: {
-    icon: "/favicon.png", // Updated to use favicon from the public folder
-  },
 };
 
 export default function RootLayout({ children }) {
@@ -25,11 +22,7 @@ export default function RootLayout({ children }) {
       <head>
         <title>{metadata.title}</title>
         <meta name="description" content={metadata.description} />
-        <link
-          rel="icon"
-          type="image/png"
-          href={metadata.icons.icon}
-        />
+        <link rel="icon" type="image/png" href="/favicon.png" />
         <style>{geistSans.styles}</style>
         <style>{geistMono.styles}</style>
       </head>
