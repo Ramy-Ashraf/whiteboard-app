@@ -22,7 +22,7 @@ export default function RootLayout({ children }) {
       <head>
         <title>{metadata.title}</title>
         <meta name="description" content={metadata.description} />
-        <link rel="icon" type="image/png" href="/favicon.png" />
+        <link rel="icon" type="image/ico" href="/favicon.ico" />
         <style>{geistSans.styles}</style>
         <style>{geistMono.styles}</style>
       </head>
