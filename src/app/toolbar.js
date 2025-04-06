@@ -63,18 +63,12 @@ const Toolbar = ({
   switchToWriteMode,
   setTool,
   tool,
-  penColor,
-  setPenColor,
-  penWidth,
-  setPenWidth,
-  highlightColor,
-  setHighlightColor,
-  highlightWidth,
-  setHighlightWidth,
-  textColor,
-  setTextColor,
-  textFontSize,
-  setTextFontSize,
+  penProps,
+  setPenProps,
+  highlightProps,
+  setHighlightProps,
+  textProps,
+  setTextProps,
   textBox,
   setTextBox,
   handlePdfUpload,
@@ -83,40 +77,23 @@ const Toolbar = ({
   deleteBoard,
   darkMode,
   setDarkMode,
+  isRecording,
   startRecording,
   stopRecording,
-  lineColor,
-  setLineColor,
-  lineWidth,
-  setLineWidth,
-  arrowColor,
-  setArrowColor,
-  arrowWidth,
-  setArrowWidth,
-  // New props for circle controls:
-  circleStrokeColor,
-  setCircleStrokeColor,
-  circleStrokeWidth,
-  setCircleStrokeWidth,
-  // New props for rounded rectangle controls:
-  roundedRectRadius,
-  setRoundedRectRadius,
-  // New props for rectangle border controls:
-  roundedRectColor,
-  setRoundedRectColor,
-  roundedRectStrokeWidth,
-  setRoundedRectStrokeWidth,
+  lineProps,
+  setLineProps,
+  arrowProps,
+  setArrowProps,
+  roundedRectProps,
+  setRoundedRectProps,
 }) => {
-  const [isRecording, setIsRecording] = useState(false);
   const [showToolOptions, setShowToolOptions] = useState(false);
 
   const toggleRecording = () => {
     if (isRecording) {
       stopRecording();
-      setIsRecording(false);
     } else {
       startRecording();
-      setIsRecording(true);
     }
   };
 
@@ -445,8 +422,10 @@ const Toolbar = ({
               </label>
               <input
                 type="color"
-                value={penColor}
-                onChange={(e) => setPenColor(e.target.value)}
+                value={penProps.color}
+                onChange={(e) =>
+                  setPenProps({ ...penProps, color: e.target.value })
+                }
                 className="w-6 h-6 border-none bg-transparent rounded-full"
               />
               <label
@@ -459,8 +438,10 @@ const Toolbar = ({
               <input
                 type="number"
                 min="1"
-                value={penWidth}
-                onChange={(e) => setPenWidth(Number(e.target.value))}
+                value={penProps.width}
+                onChange={(e) =>
+                  setPenProps({ ...penProps, width: Number(e.target.value) })
+                }
                 className="w-12 text-xs border rounded-full px-1 py-0.5 text-black"
               />
             </div>
@@ -476,8 +457,13 @@ const Toolbar = ({
               </label>
               <input
                 type="color"
-                value={highlightColor}
-                onChange={(e) => setHighlightColor(e.target.value)}
+                value={highlightProps.color}
+                onChange={(e) =>
+                  setHighlightProps({
+                    ...highlightProps,
+                    color: e.target.value,
+                  })
+                }
                 className="w-6 h-6 border-none bg-transparent rounded-full"
               />
               <label
@@ -490,8 +476,13 @@ const Toolbar = ({
               <input
                 type="number"
                 min="1"
-                value={highlightWidth}
-                onChange={(e) => setHighlightWidth(Number(e.target.value))}
+                value={highlightProps.width}
+                onChange={(e) =>
+                  setHighlightProps({
+                    ...highlightProps,
+                    width: Number(e.target.value),
+                  })
+                }
                 className="w-12 text-xs border rounded-full px-1 py-0.5 text-black"
               />
             </div>
@@ -503,8 +494,10 @@ const Toolbar = ({
               </label>
               <input
                 type="color"
-                value={textColor}
-                onChange={(e) => setTextColor(e.target.value)}
+                value={textProps.color}
+                onChange={(e) =>
+                  setTextProps({ ...textProps, color: e.target.value })
+                }
                 className="w-6 h-6 border-none bg-transparent rounded-full"
               />
               <label className="text-xs font-medium text-gray-700 dark:text-gray-200">
@@ -514,10 +507,10 @@ const Toolbar = ({
                 type="number"
                 min="10"
                 max="50"
-                value={textFontSize}
+                value={textProps.fontSize}
                 onChange={(e) => {
                   const newSize = Number(e.target.value);
-                  setTextFontSize(newSize);
+                  setTextProps({ ...textProps, fontSize: newSize });
                   if (textBox) {
                     setTextBox((prev) =>
                       prev
@@ -545,8 +538,10 @@ const Toolbar = ({
               </label>
               <input
                 type="color"
-                value={lineColor}
-                onChange={(e) => setLineColor(e.target.value)}
+                value={lineProps.color}
+                onChange={(e) =>
+                  setLineProps({ ...lineProps, color: e.target.value })
+                }
                 className="w-6 h-6 border-none bg-transparent rounded-full"
               />
               <label
@@ -559,8 +554,10 @@ const Toolbar = ({
               <input
                 type="number"
                 min="1"
-                value={lineWidth}
-                onChange={(e) => setLineWidth(Number(e.target.value))}
+                value={lineProps.width}
+                onChange={(e) =>
+                  setLineProps({ ...lineProps, width: Number(e.target.value) })
+                }
                 className="w-12 text-xs border rounded-full px-1 py-0.5 text-black"
               />
             </div>
@@ -576,8 +573,10 @@ const Toolbar = ({
               </label>
               <input
                 type="color"
-                value={arrowColor}
-                onChange={(e) => setArrowColor(e.target.value)}
+                value={arrowProps.color}
+                onChange={(e) =>
+                  setArrowProps({ ...arrowProps, color: e.target.value })
+                }
                 className="w-6 h-6 border-none bg-transparent rounded-full"
               />
               <label
@@ -590,8 +589,10 @@ const Toolbar = ({
               <input
                 type="number"
                 min="1"
-                value={arrowWidth}
-                onChange={(e) => setArrowWidth(Number(e.target.value))}
+                value={arrowProps.width}
+                onChange={(e) =>
+                  setArrowProps({ ...arrowProps, width: Number(e.target.value) })
+                }
                 className="w-12 text-xs border rounded-full px-1 py-0.5 text-black"
               />
             </div>
@@ -607,8 +608,10 @@ const Toolbar = ({
               </label>
               <input
                 type="color"
-                value={circleStrokeColor}
-                onChange={(e) => setCircleStrokeColor(e.target.value)}
+                value={penProps.color}
+                onChange={(e) =>
+                  setPenProps({ ...penProps, color: e.target.value })
+                }
                 className="w-6 h-6 border-none bg-transparent rounded-full"
               />
               <label
@@ -621,8 +624,10 @@ const Toolbar = ({
               <input
                 type="number"
                 min="1"
-                value={circleStrokeWidth}
-                onChange={(e) => setCircleStrokeWidth(Number(e.target.value))}
+                value={penProps.width}
+                onChange={(e) =>
+                  setPenProps({ ...penProps, width: Number(e.target.value) })
+                }
                 className="w-12 text-xs border rounded-full px-1 py-0.5 text-black"
               />
             </div>
@@ -639,8 +644,13 @@ const Toolbar = ({
               <input
                 type="number"
                 min="0"
-                value={roundedRectRadius}
-                onChange={(e) => setRoundedRectRadius(Number(e.target.value))}
+                value={roundedRectProps.radius}
+                onChange={(e) =>
+                  setRoundedRectProps({
+                    ...roundedRectProps,
+                    radius: Number(e.target.value),
+                  })
+                }
                 className="w-12 text-xs border rounded-full px-1 py-0.5 text-black"
               />
               <label
@@ -648,12 +658,17 @@ const Toolbar = ({
                   darkMode ? "text-gray-200" : "text-gray-700"
                 }`}
               >
-                Rect Color:
+                Color:
               </label>
               <input
                 type="color"
-                value={roundedRectColor}
-                onChange={(e) => setRoundedRectColor(e.target.value)}
+                value={roundedRectProps.color}
+                onChange={(e) =>
+                  setRoundedRectProps({
+                    ...roundedRectProps,
+                    color: e.target.value,
+                  })
+                }
                 className="w-6 h-6 border-none bg-transparent rounded-full"
               />
               <label
@@ -666,9 +681,12 @@ const Toolbar = ({
               <input
                 type="number"
                 min="1"
-                value={roundedRectStrokeWidth}
+                value={roundedRectProps.strokeWidth}
                 onChange={(e) =>
-                  setRoundedRectStrokeWidth(Number(e.target.value))
+                  setRoundedRectProps({
+                    ...roundedRectProps,
+                    strokeWidth: Number(e.target.value),
+                  })
                 }
                 className="w-12 text-xs border rounded-full px-1 py-0.5 text-black"
               />
