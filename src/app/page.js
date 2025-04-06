@@ -35,9 +35,11 @@ export default function Whiteboard() {
   // New states for arrow customization
   const [arrowColor, setArrowColor] = useState("#000000");
   const [arrowWidth, setArrowWidth] = useState(4);
-  // New states for circle border controls:
+  // New states for ellipse border controls:
   const [circleStrokeColor, setCircleStrokeColor] = useState("#000000");
   const [circleStrokeWidth, setCircleStrokeWidth] = useState(6);
+  // Define the ellipse state with separate rx and ry radiuses
+  const [currentEllipse, setCurrentEllipse] = useState(null);
   // New state for rounded rectangle border radius control:
   const [roundedRectRadius, setRoundedRectRadius] = useState(10);
   // New state for live drawing of rounded rectangle:
@@ -50,7 +52,6 @@ export default function Whiteboard() {
   const [drawing, setDrawing] = useState(false);
   const [currentPath, setCurrentPath] = useState(null);
   const [currentShape, setCurrentShape] = useState(null);
-  const [currentCircle, setCurrentCircle] = useState(null);
   const [textBox, setTextBox] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [selectionRect, setSelectionRect] = useState(null);
@@ -221,7 +222,7 @@ export default function Whiteboard() {
         });
         setDrawing(true);
       } else if (tool === "circle") {
-        setCurrentCircle({
+        setCurrentEllipse({
           type: "circle",
           center: { ...svgPoint },
           radius: 0,
@@ -377,12 +378,15 @@ export default function Whiteboard() {
           const startData = elementStartPositions.current.get(el.id);
           if (!startData) return el;
 
-          // Added circle-specific resizing logic:
+          // Special handling for ellipses
           if (el.type === "circle") {
-            const delta = svgPoint.x - resizeStartPos.current.x;
+            // Ellipse can get both larger and smaller based on mouse movement
+            const startRx = startData.originalRx || startData.originalRadius || el.rx || el.radius || 5;
+            const startRy = startData.originalRy || startData.originalRadius || el.ry || el.radius || 5;
             return {
               ...el,
-              radius: Math.max(5, startData.originalRadius + delta),
+              rx: Math.max(5, startRx + deltaX),
+              ry: Math.max(5, startRy + deltaY)
             };
           }
 
@@ -467,13 +471,16 @@ export default function Whiteboard() {
       return;
     }
 
-    if (currentCircle && tool === "circle") {
-      const dx = svgPoint.x - currentCircle.center.x;
-      const dy = svgPoint.y - currentCircle.center.y;
-      setCurrentCircle({
-        ...currentCircle,
-        radius: Math.sqrt(dx * dx + dy * dy),
-      });
+    if (currentEllipse && tool === "circle") {
+      // Calculate both x and y radius values separately for ellipse
+      const dx = svgPoint.x - currentEllipse.center.x;
+      const dy = svgPoint.y - currentEllipse.center.y;
+      setCurrentEllipse((prev) => ({
+        ...prev,
+        // Store separate rx and ry values instead of a single radius
+        rx: Math.abs(dx),
+        ry: Math.abs(dy),
+      }));
       return;
     }
 
@@ -553,9 +560,9 @@ export default function Whiteboard() {
       setCurrentShape(null);
     }
 
-    if (currentCircle) {
-      setActiveBoardElements((prev) => [...prev, currentCircle]);
-      setCurrentCircle(null);
+    if (currentEllipse) {
+      setActiveBoardElements((prev) => [...prev, currentEllipse]);
+      setCurrentEllipse(null);
     }
 
     if (currentRoundedRect) {
@@ -622,6 +629,8 @@ export default function Whiteboard() {
           originalBoundingBox: { minX, maxX },
           originalCenter: { ...el.center },
           originalRadius: el.radius,
+          originalRx: el.rx,
+          originalRy: el.ry,
         });
       } else if (el.type === "text") {
         let minX = el.x,
@@ -742,12 +751,15 @@ export default function Whiteboard() {
     } else if (element.type === "circle") {
       const cx = element.center.x,
         cy = element.center.y,
-        r = element.radius;
+        rx = element.rx || element.radius,
+        ry = element.ry || element.radius;
+      
+      // Ellipse intersection with rectangle - check if any part of ellipse is in selection rectangle
       return (
-        cx + r >= rect.x1 &&
-        cx - r <= rect.x2 &&
-        cy + r >= rect.y1 &&
-        cy - r <= rect.y2
+        cx + rx >= rect.x1 &&
+        cx - rx <= rect.x2 &&
+        cy + ry >= rect.y1 &&
+        cy - ry <= rect.y2
       );
     } else if (element.type === "roundedRect") {
       // New selection logic for rounded rectangle
@@ -978,10 +990,11 @@ export default function Whiteboard() {
                   }
                 />
               ) : element.type === "circle" ? (
-                <circle
+                <ellipse
                   cx={`${element.center.x}`}
                   cy={`${element.center.y}`}
-                  r={`${element.radius}`}
+                  rx={`${element.rx || element.radius}`}
+                  ry={`${element.ry || element.radius}`}
                   stroke={element.color}
                   strokeWidth={`${element.strokeWidth}`}
                   fill="none"
@@ -1239,14 +1252,15 @@ export default function Whiteboard() {
               } else if (element.type === "circle") {
                 const cx = element.center.x,
                   cy = element.center.y,
-                  r = element.radius;
+                  rx = element.rx || element.radius,
+                  ry = element.ry || element.radius;
                 return (
                   <g key={`${element.id}-overlay`}>
                     <rect
-                      x={`${cx - r - 5}`}
-                      y={`${cy - r - 5}`}
-                      width={`${2 * r + 10}`}
-                      height={`${2 * r + 10}`}
+                      x={`${cx - rx - 5}`}
+                      y={`${cy - ry - 5}`}
+                      width={`${2 * rx + 10}`}
+                      height={`${2 * ry + 10}`}
                       fill="none"
                       stroke="#0070f3"
                       strokeWidth="1"
@@ -1254,7 +1268,7 @@ export default function Whiteboard() {
                     />
                     {/* Move icon */}
                     <g
-                      transform={`translate(${cx + r + 10}, ${cy - r - 10})`}
+                      transform={`translate(${cx + rx + 10}, ${cy - ry - 10})`}
                       style={{ cursor: "move" }}
                       onMouseDown={(e) => {
                         e.stopPropagation();
@@ -1280,7 +1294,7 @@ export default function Whiteboard() {
                     </g>
                     {/* Resize icon */}
                     <g
-                      transform={`translate(${cx + r + 10}, ${cy + r + 10})`}
+                      transform={`translate(${cx + rx + 10}, ${cy + ry + 10})`}
                       style={{ cursor: "nwse-resize" }}
                       onMouseDown={(e) => {
                         e.stopPropagation();
@@ -1425,14 +1439,15 @@ export default function Whiteboard() {
             />
           )}
 
-          {/* Draw current circle preview */}
-          {currentCircle && (
-            <circle
-              cx={`${currentCircle.center.x}`}
-              cy={`${currentCircle.center.y}`}
-              r={`${currentCircle.radius}`}
-              stroke={currentCircle.color}
-              strokeWidth={`${currentCircle.strokeWidth}`}
+          {/* Draw current ellipse preview */}
+          {currentEllipse && (
+            <ellipse
+              cx={`${currentEllipse.center.x}`}
+              cy={`${currentEllipse.center.y}`}
+              rx={`${currentEllipse.rx}`}
+              ry={`${currentEllipse.ry}`}
+              stroke={currentEllipse.color}
+              strokeWidth={`${currentEllipse.strokeWidth}`}
               fill="none"
               strokeLinecap="round"
               strokeLinejoin="round"
