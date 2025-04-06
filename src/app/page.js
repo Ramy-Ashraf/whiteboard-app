@@ -33,11 +33,18 @@ export default function Whiteboard() {
   });
   const [lineProps, setLineProps] = useState({ color: "#77767B", width: 6 });
   const [arrowProps, setArrowProps] = useState({ color: "#77767B", width: 4 });
-  const [textProps, setTextProps] = useState({ color: "#77767B", fontSize: 25 });
+  const [textProps, setTextProps] = useState({
+    color: "#77767B",
+    fontSize: 25,
+  });
   const [roundedRectProps, setRoundedRectProps] = useState({
     color: "#77767B",
     strokeWidth: 6,
     radius: 10,
+  });
+  const [ellipseProps, setEllipseProps] = useState({
+    color: "#77767B",
+    strokeWidth: 6,
   });
 
   // Drawing states
@@ -159,7 +166,7 @@ export default function Whiteboard() {
         if (!el) return [id, {}];
 
         switch (el.type) {
-          case "circle":
+          case "ellipse":
             return [id, { center: { ...el.center } }];
           case "roundedRect":
             return [id, { x: el.x, y: el.y }];
@@ -218,11 +225,11 @@ export default function Whiteboard() {
         setDrawing(true);
       } else if (tool === "circle") {
         setCurrentEllipse({
-          type: "circle",
+          type: "ellipse",
           center: { ...svgPoint },
           radius: 0,
-          color: penProps.color,
-          strokeWidth: penProps.width,
+          color: ellipseProps.color,
+          strokeWidth: ellipseProps.strokeWidth,
           id: Date.now(),
         });
         setDrawing(true);
@@ -317,7 +324,7 @@ export default function Whiteboard() {
           if (!startPos) return el;
 
           switch (el.type) {
-            case "circle":
+            case "ellipse":
               return {
                 ...el,
                 center: {
@@ -374,7 +381,7 @@ export default function Whiteboard() {
           if (!startData) return el;
 
           // Special handling for ellipses
-          if (el.type === "circle") {
+          if (el.type === "ellipse") {
             // Ellipse can get both larger and smaller based on mouse movement
             const startRx =
               startData.originalRx ||
@@ -428,7 +435,7 @@ export default function Whiteboard() {
             const newX2 = minX + (startData.x2 - minX) * scaleX;
             const newY2 = minY + (startData.y2 - minY) * scaleY;
             return { ...el, x1: newX1, y1: newY1, x2: newX2, y2: newY2 };
-          } else if (el.type === "circle") {
+          } else if (el.type === "ellipse") {
             const newRadius = Math.sqrt(
               (svgPoint.x - startData.originalCenter.x) ** 2 +
                 (svgPoint.y - startData.originalCenter.y) ** 2
@@ -597,7 +604,7 @@ export default function Whiteboard() {
           const el = activeBoard.elements.find((e) => e.id === id);
           if (el.type === "text") {
             return [id, { x: el.x, y: el.y }];
-          } else if (el.type === "circle") {
+          } else if (el.type === "ellipse") {
             return [id, { center: { ...el.center } }];
           } else if (el.type === "line" || el.type === "arrow") {
             return [id, { x1: el.x1, y1: el.y1, x2: el.x2, y2: el.y2 }];
@@ -626,8 +633,8 @@ export default function Whiteboard() {
       const el = activeBoard.elements.find((el) => el.id === id);
       if (!el) return;
 
-      if (el.type === "circle") {
-        // Fix: store bounding box for circle resizing
+      if (el.type === "ellipse") {
+        // Fix: store bounding box for ellipse resizing
         const minX = el.center.x - el.radius;
         const maxX = el.center.x + el.radius;
         elementsData.set(el.id, {
@@ -753,7 +760,7 @@ export default function Whiteboard() {
       return (
         minX < rect.x2 && maxX > rect.x1 && minY < rect.y2 && maxY > rect.y1
       );
-    } else if (element.type === "circle") {
+    } else if (element.type === "ellipse") {
       const cx = element.center.x,
         cy = element.center.y,
         rx = element.rx || element.radius,
@@ -884,6 +891,8 @@ export default function Whiteboard() {
         setArrowProps={setArrowProps}
         roundedRectProps={roundedRectProps}
         setRoundedRectProps={setRoundedRectProps}
+        ellipseProps={ellipseProps}
+        setEllipseProps={setEllipseProps}
       />
 
       <div
@@ -973,7 +982,7 @@ export default function Whiteboard() {
                     element.type === "arrow" ? "url(#arrowhead)" : undefined
                   }
                 />
-              ) : element.type === "circle" ? (
+              ) : element.type === "ellipse" ? (
                 <ellipse
                   cx={`${element.center.x}`}
                   cy={`${element.center.y}`}
@@ -1233,7 +1242,7 @@ export default function Whiteboard() {
                     </g>
                   </g>
                 );
-              } else if (element.type === "circle") {
+              } else if (element.type === "ellipse") {
                 const cx = element.center.x,
                   cy = element.center.y,
                   rx = element.rx || element.radius,

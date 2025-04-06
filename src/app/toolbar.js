@@ -23,31 +23,38 @@ import { motion } from "framer-motion";
 // Memoize button styles
 const darkModeStyles = {
   base: "bg-gray-800 text-gray-200 hover:bg-gray-700 hover:translate-y-[-2px] transform-gpu border border-gray-700",
-  light: "bg-gray-100 text-gray-700 hover:bg-gray-200 hover:translate-y-[-2px] transform-gpu border border-gray-300",
+  light:
+    "bg-gray-100 text-gray-700 hover:bg-gray-200 hover:translate-y-[-2px] transform-gpu border border-gray-300",
 };
 
 // Memoize ToolbarButton component
-const ToolbarButton = memo(({ onClick, title, icon: Icon, isActive, darkMode }) => {
-  const buttonStyle = useMemo(() => `flex items-center justify-center w-8 h-8 rounded-full shadow-[2px_2px_4px_rgba(0,0,0,0.2),-1px_-1px_4px_rgba(255,255,255,0.1)] transition-all ${
-    isActive
-      ? "bg-purple-600 text-white transform-gpu translate-y-[-1px] border border-purple-700"
-      : darkMode
-      ? darkModeStyles.base
-      : darkModeStyles.light
-  }`, [isActive, darkMode]);
+const ToolbarButton = memo(
+  ({ onClick, title, icon: Icon, isActive, darkMode }) => {
+    const buttonStyle = useMemo(
+      () =>
+        `flex items-center justify-center w-8 h-8 rounded-full shadow-[2px_2px_4px_rgba(0,0,0,0.2),-1px_-1px_4px_rgba(255,255,255,0.1)] transition-all ${
+          isActive
+            ? "bg-purple-600 text-white transform-gpu translate-y-[-1px] border border-purple-700"
+            : darkMode
+            ? darkModeStyles.base
+            : darkModeStyles.light
+        }`,
+      [isActive, darkMode]
+    );
 
-  return (
-    <motion.button
-      whileHover={{ scale: 1.05, y: -2 }}
-      whileTap={{ scale: 0.95, y: 1 }}
-      onClick={onClick}
-      title={title}
-      className={buttonStyle}
-    >
-      <Icon size={16} />
-    </motion.button>
-  );
-});
+    return (
+      <motion.button
+        whileHover={{ scale: 1.05, y: -2 }}
+        whileTap={{ scale: 0.95, y: 1 }}
+        onClick={onClick}
+        title={title}
+        className={buttonStyle}
+      >
+        <Icon size={16} />
+      </motion.button>
+    );
+  }
+);
 
 // Main component
 const Toolbar = ({
@@ -86,6 +93,8 @@ const Toolbar = ({
   setArrowProps,
   roundedRectProps,
   setRoundedRectProps,
+  ellipseProps,
+  setEllipseProps,
 }) => {
   const [showToolOptions, setShowToolOptions] = useState(false);
 
@@ -118,7 +127,9 @@ const Toolbar = ({
   return (
     <div
       className={`mb-2 py-2 px-4 ${
-        darkMode ? "bg-gray-950 border border-gray-800" : "bg-gray-200 border border-gray-300"
+        darkMode
+          ? "bg-gray-950 border border-gray-800"
+          : "bg-gray-200 border border-gray-300"
       } rounded-lg shadow-[4px_4px_8px_rgba(0,0,0,0.2),-2px_-2px_8px_rgba(255,255,255,0.1)] transform-gpu`}
     >
       {activeBoard.pdfUrl ? (
@@ -268,7 +279,7 @@ const Toolbar = ({
                   />
                   <ToolbarButton
                     onClick={() => setTool("circle")}
-                    title="Circle"
+                    title="Ellipse"
                     icon={LuCircle}
                     isActive={tool === "circle"}
                     darkMode={darkMode}
@@ -355,7 +366,9 @@ const Toolbar = ({
       {mode === "write" && showToolOptions && (
         <div
           className={`mt-2 flex flex-wrap items-center gap-4 justify-start ${
-            darkMode ? "bg-gray-950 border border-gray-800" : "bg-gray-100 border border-gray-300"
+            darkMode
+              ? "bg-gray-950 border border-gray-800"
+              : "bg-gray-100 border border-gray-300"
           } p-2 rounded-lg shadow`}
         >
           {/* Mobile: show tool buttons inside tool options */}
@@ -398,7 +411,7 @@ const Toolbar = ({
             />
             <ToolbarButton
               onClick={() => setTool("circle")}
-              title="Circle"
+              title="Ellipse"
               icon={LuCircle}
               isActive={tool === "circle"}
               darkMode={darkMode}
@@ -591,7 +604,10 @@ const Toolbar = ({
                 min="1"
                 value={arrowProps.width}
                 onChange={(e) =>
-                  setArrowProps({ ...arrowProps, width: Number(e.target.value) })
+                  setArrowProps({
+                    ...arrowProps,
+                    width: Number(e.target.value),
+                  })
                 }
                 className="w-12 text-xs border rounded-full px-1 py-0.5 text-black"
               />
@@ -604,13 +620,13 @@ const Toolbar = ({
                   darkMode ? "text-gray-200" : "text-gray-700"
                 }`}
               >
-                Border Color:
+                Ellipse Border Color:
               </label>
               <input
                 type="color"
-                value={penProps.color}
+                value={ellipseProps.color}
                 onChange={(e) =>
-                  setPenProps({ ...penProps, color: e.target.value })
+                  setEllipseProps({ ...ellipseProps, color: e.target.value })
                 }
                 className="w-6 h-6 border-none bg-transparent rounded-full"
               />
@@ -619,14 +635,17 @@ const Toolbar = ({
                   darkMode ? "text-gray-200" : "text-gray-700"
                 }`}
               >
-                Border Width:
+                Ellipse Border Width:
               </label>
               <input
                 type="number"
                 min="1"
-                value={penProps.width}
+                value={ellipseProps.strokeWidth}
                 onChange={(e) =>
-                  setPenProps({ ...penProps, width: Number(e.target.value) })
+                  setEllipseProps({
+                    ...ellipseProps,
+                    strokeWidth: Number(e.target.value),
+                  })
                 }
                 className="w-12 text-xs border rounded-full px-1 py-0.5 text-black"
               />
