@@ -26,16 +26,16 @@ export default function Whiteboard() {
   const [tool, setTool] = useState("pen");
 
   // Colors and widths for different tools
-  const [penProps, setPenProps] = useState({ color: "#000000", width: 6 });
+  const [penProps, setPenProps] = useState({ color: "#77767B", width: 6 });
   const [highlightProps, setHighlightProps] = useState({
     color: "#FFFF00",
     width: 40,
   });
-  const [lineProps, setLineProps] = useState({ color: "#000000", width: 6 });
-  const [arrowProps, setArrowProps] = useState({ color: "#000000", width: 4 });
-  const [textProps, setTextProps] = useState({ color: "#000000", fontSize: 25 });
+  const [lineProps, setLineProps] = useState({ color: "#77767B", width: 6 });
+  const [arrowProps, setArrowProps] = useState({ color: "#77767B", width: 4 });
+  const [textProps, setTextProps] = useState({ color: "#77767B", fontSize: 25 });
   const [roundedRectProps, setRoundedRectProps] = useState({
-    color: "#000000",
+    color: "#77767B",
     strokeWidth: 6,
     radius: 10,
   });
@@ -841,7 +841,7 @@ export default function Whiteboard() {
   return (
     <div
       className={`${
-        darkMode ? "bg-gray-900 text-white" : "bg-gray-100 text-black"
+        darkMode ? "bg-zinc-950 text-white" : "bg-gray-100 text-black"
       } flex flex-col h-screen p-2 overflow-hidden`}
       style={{
         height: "calc(var(--vh, 1vh) * 100)",
@@ -904,7 +904,7 @@ export default function Whiteboard() {
             activeBoard.pdfUrl
               ? "pointer-events-none"
               : darkMode
-              ? "border-gray-600 bg-gray-800"
+              ? "border-gray-600 bg-black"
               : "border-gray-300 bg-white"
           } z-10`}
           onMouseDown={handleMouseDown}

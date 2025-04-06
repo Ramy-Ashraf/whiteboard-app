@@ -22,15 +22,15 @@ import { motion } from "framer-motion";
 
 // Memoize button styles
 const darkModeStyles = {
-  base: "bg-gray-700 text-gray-200 hover:bg-gray-600",
-  light: "bg-white text-gray-700 hover:bg-gray-100",
+  base: "bg-gray-800 text-gray-200 hover:bg-gray-700 hover:translate-y-[-2px] transform-gpu border border-gray-700",
+  light: "bg-gray-100 text-gray-700 hover:bg-gray-200 hover:translate-y-[-2px] transform-gpu border border-gray-300",
 };
 
 // Memoize ToolbarButton component
 const ToolbarButton = memo(({ onClick, title, icon: Icon, isActive, darkMode }) => {
-  const buttonStyle = useMemo(() => `flex items-center justify-center w-8 h-8 rounded-full shadow transition ${
+  const buttonStyle = useMemo(() => `flex items-center justify-center w-8 h-8 rounded-full shadow-[2px_2px_4px_rgba(0,0,0,0.2),-1px_-1px_4px_rgba(255,255,255,0.1)] transition-all ${
     isActive
-      ? "bg-blue-600 text-white"
+      ? "bg-purple-600 text-white transform-gpu translate-y-[-1px] border border-purple-700"
       : darkMode
       ? darkModeStyles.base
       : darkModeStyles.light
@@ -38,8 +38,8 @@ const ToolbarButton = memo(({ onClick, title, icon: Icon, isActive, darkMode }) 
 
   return (
     <motion.button
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
+      whileHover={{ scale: 1.05, y: -2 }}
+      whileTap={{ scale: 0.95, y: 1 }}
       onClick={onClick}
       title={title}
       className={buttonStyle}
@@ -107,8 +107,8 @@ const Toolbar = ({
         isRecording
           ? "bg-red-600 text-white"
           : darkMode
-          ? "bg-gray-700 text-gray-200 hover:bg-gray-600"
-          : "bg-white text-gray-700 hover:bg-gray-100"
+          ? "bg-gray-900 text-gray-200 hover:bg-gray-800 border border-gray-800"
+          : "bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300"
       }`}
     >
       {isRecording ? <LuSquare size={16} /> : <LuCircle size={16} />}
@@ -118,8 +118,8 @@ const Toolbar = ({
   return (
     <div
       className={`mb-2 py-2 px-4 ${
-        darkMode ? "bg-gray-800" : "bg-gray-50"
-      } rounded-lg shadow-md`}
+        darkMode ? "bg-gray-950 border border-gray-800" : "bg-gray-200 border border-gray-300"
+      } rounded-lg shadow-[4px_4px_8px_rgba(0,0,0,0.2),-2px_-2px_8px_rgba(255,255,255,0.1)] transform-gpu`}
     >
       {activeBoard.pdfUrl ? (
         <div className="flex items-center justify-between">
@@ -148,8 +148,8 @@ const Toolbar = ({
               title="Upload PDF"
               className={`hidden md:inline-flex cursor-pointer items-center justify-center w-8 h-8 rounded-full shadow transition ${
                 darkMode
-                  ? "bg-gray-700 text-gray-200 hover:bg-gray-600"
-                  : "bg-white text-gray-700 hover:bg-gray-100"
+                  ? "bg-gray-900 text-gray-200 hover:bg-gray-800 border border-gray-800"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300"
               }`}
             >
               <LuUpload size={16} />
@@ -172,8 +172,8 @@ const Toolbar = ({
               }}
               className={`px-2 py-1 text-sm rounded-full shadow focus:outline-none ${
                 darkMode
-                  ? "bg-gray-700 text-gray-200 hover:bg-gray-600"
-                  : "bg-white text-gray-700 hover:bg-gray-100"
+                  ? "bg-gray-900 text-gray-200 hover:bg-gray-800 border border-gray-800"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300"
               }`}
             >
               {boards.map((board) => (
@@ -298,8 +298,8 @@ const Toolbar = ({
               title="Upload PDF"
               className={`hidden md:inline-flex cursor-pointer items-center justify-center w-8 h-8 rounded-full shadow transition ${
                 darkMode
-                  ? "bg-gray-700 text-gray-200 hover:bg-gray-600"
-                  : "bg-white text-gray-700 hover:bg-gray-100"
+                  ? "bg-gray-900 text-gray-200 hover:bg-gray-800 border border-gray-800"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300"
               }`}
             >
               <LuUpload size={16} />
@@ -322,8 +322,8 @@ const Toolbar = ({
               }}
               className={`px-2 py-1 text-sm rounded-full shadow focus:outline-none ${
                 darkMode
-                  ? "bg-gray-700 text-gray-200 hover:bg-gray-600"
-                  : "bg-white text-gray-700 hover:bg-gray-100"
+                  ? "bg-gray-900 text-gray-200 hover:bg-gray-800 border border-gray-800"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300"
               }`}
             >
               {boards.map((board) => (
@@ -355,7 +355,7 @@ const Toolbar = ({
       {mode === "write" && showToolOptions && (
         <div
           className={`mt-2 flex flex-wrap items-center gap-4 justify-start ${
-            darkMode ? "bg-gray-700" : "bg-white"
+            darkMode ? "bg-gray-950 border border-gray-800" : "bg-gray-100 border border-gray-300"
           } p-2 rounded-lg shadow`}
         >
           {/* Mobile: show tool buttons inside tool options */}
