@@ -20,46 +20,43 @@ export default function Whiteboard() {
   const [mediaRecorder, setMediaRecorder] = useState(null);
   const recordedChunksRef = useRef([]);
 
-  // Whiteboard states
+  // Tool states
   const [darkMode, setDarkMode] = useState(true);
   const [mode, setMode] = useState("write");
   const [tool, setTool] = useState("pen");
-  const [penColor, setPenColor] = useState("#000000");
-  const [highlightColor, setHighlightColor] = useState("#FFFF00");
-  const [textColor, setTextColor] = useState("#000000");
-  const [penWidth, setPenWidth] = useState(6);
-  const [highlightWidth, setHighlightWidth] = useState(40);
-  // States for line customization
-  const [lineColor, setLineColor] = useState("#000000");
-  const [lineWidth, setLineWidth] = useState(6);
-  // New states for arrow customization
-  const [arrowColor, setArrowColor] = useState("#000000");
-  const [arrowWidth, setArrowWidth] = useState(4);
-  // New states for ellipse border controls:
-  const [circleStrokeColor, setCircleStrokeColor] = useState("#000000");
-  const [circleStrokeWidth, setCircleStrokeWidth] = useState(6);
-  // Define the ellipse state with separate rx and ry radiuses
-  const [currentEllipse, setCurrentEllipse] = useState(null);
-  // New state for rounded rectangle border radius control:
-  const [roundedRectRadius, setRoundedRectRadius] = useState(10);
-  // New state for live drawing of rounded rectangle:
-  const [currentRoundedRect, setCurrentRoundedRect] = useState(null);
-  // New states for rectangle border controls:
-  const [roundedRectColor, setRoundedRectColor] = useState("#000000");
-  const [roundedRectStrokeWidth, setRoundedRectStrokeWidth] = useState(6);
 
+  // Colors and widths for different tools
+  const [penProps, setPenProps] = useState({ color: "#000000", width: 6 });
+  const [highlightProps, setHighlightProps] = useState({
+    color: "#FFFF00",
+    width: 40,
+  });
+  const [lineProps, setLineProps] = useState({ color: "#000000", width: 6 });
+  const [arrowProps, setArrowProps] = useState({ color: "#000000", width: 4 });
+  const [textProps, setTextProps] = useState({ color: "#000000", fontSize: 25 });
+  const [roundedRectProps, setRoundedRectProps] = useState({
+    color: "#000000",
+    strokeWidth: 6,
+    radius: 10,
+  });
+
+  // Drawing states
   const [selectedElements, setSelectedElements] = useState(new Set());
   const [drawing, setDrawing] = useState(false);
   const [currentPath, setCurrentPath] = useState(null);
   const [currentShape, setCurrentShape] = useState(null);
+  const [currentEllipse, setCurrentEllipse] = useState(null);
+  const [currentRoundedRect, setCurrentRoundedRect] = useState(null);
   const [textBox, setTextBox] = useState(null);
+
+  // Interaction states
   const [isDragging, setIsDragging] = useState(false);
   const [selectionRect, setSelectionRect] = useState(null);
   const [isMoveIconDragging, setIsMoveIconDragging] = useState(false);
   const [isResizingTextBox, setIsResizingTextBox] = useState(false);
   const [isResizingElement, setIsResizingElement] = useState(false);
-  const [textFontSize, setTextFontSize] = useState(25);
 
+  // Refs
   const svgRef = useRef(null);
   const textInputRef = useRef(null);
   const dragStartPos = useRef({ x: 0, y: 0 });
@@ -155,12 +152,12 @@ export default function Whiteboard() {
   const moveIconHandler = (clientX, clientY) => {
     setIsMoveIconDragging(true);
     dragStartPos.current = getSVGPoint(clientX, clientY);
-    
+
     elementStartPositions.current = new Map(
       Array.from(selectedElements).map((id) => {
         const el = activeBoard.elements.find((e) => e.id === id);
         if (!el) return [id, {}];
-  
+
         switch (el.type) {
           case "circle":
             return [id, { center: { ...el.center } }];
@@ -173,7 +170,7 @@ export default function Whiteboard() {
             return [id, { x: el.x, y: el.y }];
           default:
             if (el.points) {
-              return [id, { points: el.points.map(p => [...p]) }];
+              return [id, { points: el.points.map((p) => [...p]) }];
             }
             return [id, {}];
         }
@@ -186,13 +183,12 @@ export default function Whiteboard() {
     const svgPoint = getSVGPoint(e.clientX, e.clientY);
     if (mode === "write") {
       if (tool === "pen" || tool === "highlight") {
-        const chosenColor = tool === "pen" ? penColor : highlightColor;
-        const chosenWidth = tool === "pen" ? penWidth : highlightWidth;
+        const chosenProps = tool === "pen" ? penProps : highlightProps;
         setCurrentPath({
           type: tool,
           points: [[svgPoint.x, svgPoint.y]],
-          color: chosenColor,
-          strokeWidth: chosenWidth,
+          color: chosenProps.color,
+          strokeWidth: chosenProps.width,
           id: Date.now(),
         });
         setDrawing(true);
@@ -202,22 +198,21 @@ export default function Whiteboard() {
           x: svgPoint.x,
           y: svgPoint.y,
           width: 100,
-          height: textFontSize * 2,
+          height: textProps.fontSize * 2,
           content: "",
           id: Date.now(),
           active: false,
-          fontSize: textFontSize,
+          fontSize: textProps.fontSize,
         });
         setIsDragging(true);
       } else if (tool === "line" || tool === "arrow") {
-        const chosenColor = tool === "line" ? lineColor : arrowColor;
-        const chosenWidth = tool === "line" ? lineWidth : arrowWidth;
+        const chosenProps = tool === "line" ? lineProps : arrowProps;
         setCurrentShape({
           type: tool,
           start: svgPoint,
           end: svgPoint,
-          color: chosenColor,
-          strokeWidth: chosenWidth,
+          color: chosenProps.color,
+          strokeWidth: chosenProps.width,
           id: Date.now(),
         });
         setDrawing(true);
@@ -226,8 +221,8 @@ export default function Whiteboard() {
           type: "circle",
           center: { ...svgPoint },
           radius: 0,
-          color: circleStrokeColor,
-          strokeWidth: circleStrokeWidth,
+          color: penProps.color,
+          strokeWidth: penProps.width,
           id: Date.now(),
         });
         setDrawing(true);
@@ -239,9 +234,9 @@ export default function Whiteboard() {
           y: svgPoint.y,
           width: 0,
           height: 0,
-          color: penColor,
-          strokeWidth: penWidth,
-          rx: roundedRectRadius,
+          color: penProps.color,
+          strokeWidth: penProps.width,
+          rx: roundedRectProps.radius,
           id: Date.now(),
         });
         setDrawing(true);
@@ -313,14 +308,14 @@ export default function Whiteboard() {
     if (isMoveIconDragging) {
       const deltaX = svgPoint.x - dragStartPos.current.x;
       const deltaY = svgPoint.y - dragStartPos.current.y;
-      
+
       setActiveBoardElements((prev) =>
         prev.map((el) => {
           if (!selectedElements.has(el.id)) return el;
-          
+
           const startPos = elementStartPositions.current.get(el.id);
           if (!startPos) return el;
-  
+
           switch (el.type) {
             case "circle":
               return {
@@ -328,7 +323,7 @@ export default function Whiteboard() {
                 center: {
                   x: startPos.center.x + deltaX,
                   y: startPos.center.y + deltaY,
-                }
+                },
               };
             case "roundedRect":
               return {
@@ -381,12 +376,22 @@ export default function Whiteboard() {
           // Special handling for ellipses
           if (el.type === "circle") {
             // Ellipse can get both larger and smaller based on mouse movement
-            const startRx = startData.originalRx || startData.originalRadius || el.rx || el.radius || 5;
-            const startRy = startData.originalRy || startData.originalRadius || el.ry || el.radius || 5;
+            const startRx =
+              startData.originalRx ||
+              startData.originalRadius ||
+              el.rx ||
+              el.radius ||
+              5;
+            const startRy =
+              startData.originalRy ||
+              startData.originalRadius ||
+              el.ry ||
+              el.radius ||
+              5;
             return {
               ...el,
               rx: Math.max(5, startRx + deltaX),
-              ry: Math.max(5, startRy + deltaY)
+              ry: Math.max(5, startRy + deltaY),
             };
           }
 
@@ -444,7 +449,7 @@ export default function Whiteboard() {
                 10,
                 originalHeight + (svgPoint.y - resizeStartPos.current.y)
               ),
-              rx: roundedRectRadius,
+              rx: roundedRectProps.radius,
             };
           }
 
@@ -571,8 +576,8 @@ export default function Whiteboard() {
         {
           ...currentRoundedRect,
           // Merge the border properties from the state:
-          color: roundedRectColor,
-          strokeWidth: roundedRectStrokeWidth,
+          color: roundedRectProps.color,
+          strokeWidth: roundedRectProps.strokeWidth,
         },
       ]);
       setCurrentRoundedRect(null);
@@ -720,7 +725,7 @@ export default function Whiteboard() {
           width: measuredWidth,
           content: textBox.content,
           id: textBox.id,
-          color: textColor,
+          color: textProps.color,
           fontSize: textBox.fontSize,
         },
       ]);
@@ -753,7 +758,7 @@ export default function Whiteboard() {
         cy = element.center.y,
         rx = element.rx || element.radius,
         ry = element.ry || element.radius;
-      
+
       // Ellipse intersection with rectangle - check if any part of ellipse is in selection rectangle
       return (
         cx + rx >= rect.x1 &&
@@ -856,18 +861,12 @@ export default function Whiteboard() {
         switchToWriteMode={switchToWriteMode}
         setTool={setTool}
         tool={tool}
-        penColor={penColor}
-        setPenColor={setPenColor}
-        penWidth={penWidth}
-        setPenWidth={setPenWidth}
-        highlightColor={highlightColor}
-        setHighlightColor={setHighlightColor}
-        highlightWidth={highlightWidth}
-        setHighlightWidth={setHighlightWidth}
-        textColor={textColor}
-        setTextColor={setTextColor}
-        textFontSize={textFontSize}
-        setTextFontSize={setTextFontSize}
+        penProps={penProps}
+        setPenProps={setPenProps}
+        highlightProps={highlightProps}
+        setHighlightProps={setHighlightProps}
+        textProps={textProps}
+        setTextProps={setTextProps}
         textBox={textBox}
         setTextBox={setTextBox}
         handlePdfUpload={handlePdfUpload}
@@ -879,27 +878,12 @@ export default function Whiteboard() {
         isRecording={isRecording}
         startRecording={startRecording}
         stopRecording={stopRecording}
-        lineColor={lineColor}
-        setLineColor={setLineColor}
-        lineWidth={lineWidth}
-        setLineWidth={setLineWidth}
-        arrowColor={arrowColor}
-        setArrowColor={setArrowColor}
-        arrowWidth={arrowWidth}
-        setArrowWidth={setArrowWidth}
-        // Pass new circle control props:
-        circleStrokeColor={circleStrokeColor}
-        setCircleStrokeColor={setCircleStrokeColor}
-        circleStrokeWidth={circleStrokeWidth}
-        setCircleStrokeWidth={setCircleStrokeWidth}
-        // Pass new rounded rectangle control props:
-        roundedRectRadius={roundedRectRadius}
-        setRoundedRectRadius={setRoundedRectRadius}
-        // Pass new rectangle border control props:
-        roundedRectColor={roundedRectColor}
-        setRoundedRectColor={setRoundedRectColor}
-        roundedRectStrokeWidth={roundedRectStrokeWidth}
-        setRoundedRectStrokeWidth={setRoundedRectStrokeWidth}
+        lineProps={lineProps}
+        setLineProps={setLineProps}
+        arrowProps={arrowProps}
+        setArrowProps={setArrowProps}
+        roundedRectProps={roundedRectProps}
+        setRoundedRectProps={setRoundedRectProps}
       />
 
       <div
@@ -1463,8 +1447,8 @@ export default function Whiteboard() {
               height={currentRoundedRect.height}
               rx={currentRoundedRect.rx}
               ry={currentRoundedRect.rx}
-              stroke={roundedRectColor}
-              strokeWidth={roundedRectStrokeWidth}
+              stroke={roundedRectProps.color}
+              strokeWidth={roundedRectProps.strokeWidth}
               fill="none"
             />
           )}
