@@ -1,36 +1,100 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Whiteboard
+
+A Next.js application for viewing, annotating, and collaborating on PDF documents.
+
+## Overview
+
+Whiteboard is a web-based application that provides a powerful interface for working with PDF documents. It enables users to view, annotate, and collaborate on PDF files with features like:
+
+- PDF rendering and viewing
+- Annotation tools (highlight, freetext, stamps)
+- Drawing capabilities
+- Document manipulation
+- Text content extraction
+- Collaborative editing features
+
+## Features
+
+### PDF Viewing
+- Responsive document rendering
+- Page navigation
+- Zoom and rotation controls
+- Text selection and search
+
+### Annotation Capabilities
+- Highlight text
+- Add text annotations
+- Insert stamps and images
+- Draw freehand
+- Add comments
+
+### Document Management
+- Save annotated documents
+- Extract document metadata
+- Manage attachments
+- Export and share
+
+## Technology Stack
+
+- **Frontend**: Next.js, React
+- **Rendering**: PDF.js (Mozilla)
+- **Styling**: CSS (with Next.js styling features)
+- **Deployment**: Vercel (recommended)
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js (v14.x or higher)
+- npm or yarn
+
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/whiteboard.git
+   cd whiteboard
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
+
+3. Run the development server:
+   ```bash
+   npm run dev
+   # or
+   yarn dev
+   ```
+
+4. Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
+
+## Usage
+
+Upload a PDF document to begin viewing and editing. Use the toolbar to access various annotation tools and features.
+
+## Building for Production
 
 ```bash
-npm run dev
+npm run build
 # or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+yarn build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Start the production server:
+```bash
+npm start
+# or
+yarn start
+```
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## Contributing
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-## Learn More
+## License
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+[MIT](LICENSE) (or specify your license)
