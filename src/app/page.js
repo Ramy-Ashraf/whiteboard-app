@@ -6,11 +6,23 @@ import Toolbar from "@/components/toolbar";
 import { cn } from "@/lib/utils";
 // Import react-pdf components
 import { Document, Page, pdfjs } from 'react-pdf';
-// import 'react-pdf/dist/Page/AnnotationLayer.css';
-// import 'react-pdf/dist/Page/TextLayer.css';
+import 'react-pdf/dist/Page/AnnotationLayer.css';
+import 'react-pdf/dist/Page/TextLayer.css';
 
-// // Set the worker source outside of the component
-// pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.mjs`;
+// Set the worker source outside of the component
+pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.mjs`;
+
+// Polyfill for Promise.withResolvers
+if (typeof Promise.withResolvers !== "function") {
+  Promise.withResolvers = function() {
+    let resolve, reject;
+    const promise = new Promise((res, rej) => {
+      resolve = res;
+      reject = rej;
+    });
+    return { promise, resolve, reject };
+  };
+}
 
 export default function Whiteboard() {
   // Board management states
