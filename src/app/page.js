@@ -1,28 +1,16 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, memo } from "react";
 import { LuMove, LuMoveDiagonal2 } from "react-icons/lu";
 import Toolbar from "@/components/toolbar";
 import { cn } from "@/lib/utils";
 // Import react-pdf components
-import { Document, Page, pdfjs } from 'react-pdf';
-import 'react-pdf/dist/Page/AnnotationLayer.css';
-import 'react-pdf/dist/Page/TextLayer.css';
+import { Document, Page, pdfjs } from "react-pdf";
+import "react-pdf/dist/Page/AnnotationLayer.css";
+import "react-pdf/dist/Page/TextLayer.css";
 
 // Set the worker source outside of the component
 pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.mjs`;
-
-// Polyfill for Promise.withResolvers
-if (typeof Promise.withResolvers !== "function") {
-  Promise.withResolvers = function() {
-    let resolve, reject;
-    const promise = new Promise((res, rej) => {
-      resolve = res;
-      reject = rej;
-    });
-    return { promise, resolve, reject };
-  };
-}
 
 export default function Whiteboard() {
   // Board management states
@@ -45,7 +33,7 @@ export default function Whiteboard() {
   const handleZoom = (delta, clientX, clientY) => {
     const scaleFactor = delta > 0 ? 1.1 : 0.9;
     const newZoom = Math.min(Math.max(zoom * scaleFactor, 0.1), 5);
-    
+
     // Calculate mouse position relative to SVG
     const svgRect = svgRef.current.getBoundingClientRect();
     const mouseX = clientX - svgRect.left;
@@ -80,7 +68,7 @@ export default function Whiteboard() {
     if (isPanning) {
       const dx = clientX - lastMousePos.current.x;
       const dy = clientY - lastMousePos.current.y;
-      setPan(prev => ({ x: prev.x + dx, y: prev.y + dy }));
+      setPan((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
       lastMousePos.current = { x: clientX, y: clientY };
     }
   };
@@ -91,8 +79,8 @@ export default function Whiteboard() {
 
   // Close PDF function
   const closePdf = () => {
-    setBoards(prevBoards =>
-      prevBoards.map(board =>
+    setBoards((prevBoards) =>
+      prevBoards.map((board) =>
         board.id === activeBoardId ? { ...board, pdfUrl: null } : board
       )
     );
@@ -101,15 +89,27 @@ export default function Whiteboard() {
     setPdfDimensions({ width: 0, height: 0 });
   };
 
-  // Add useEffect for wheel event
+  // Add useEffect for wheel event with proper cleanup
   useEffect(() => {
-    const preventDefault = (e) => {
+    const wheelHandler = (e) => {
       if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
       }
     };
-    document.addEventListener('wheel', preventDefault, { passive: false });
-    return () => document.removeEventListener('wheel', preventDefault);
+
+    const cleanupPdfWorker = () => {
+      if (pdfjs.GlobalWorkerOptions.workerSrc) {
+        // Cleanup PDF.js worker
+        pdfjs.GlobalWorkerOptions.workerSrc = null;
+      }
+    };
+
+    document.addEventListener("wheel", wheelHandler, { passive: false });
+
+    return () => {
+      document.removeEventListener("wheel", wheelHandler);
+      cleanupPdfWorker();
+    };
   }, []);
 
   // Recorder state
@@ -292,7 +292,7 @@ export default function Whiteboard() {
     // Allow PDF movement in select mode
     if (activeBoard.pdfUrl && mode === "select") {
       elementStartPositions.current = new Map([
-        ["pdf", { x: pan.x, y: pan.y }]
+        ["pdf", { x: pan.x, y: pan.y }],
       ]);
       return;
     }
@@ -327,13 +327,13 @@ export default function Whiteboard() {
   // Event handlers
   const handleMouseDown = (e) => {
     const svgPoint = getSVGPoint(e.clientX, e.clientY);
-    
+
     // Allow zooming regardless of mode
     if (e.buttons === 2 || (e.buttons === 1 && e.altKey)) {
       startPanning(e, e.clientX, e.clientY);
       return;
     }
-    
+
     if (mode === "write") {
       if (tool === "pen" || tool === "highlight") {
         const chosenProps = tool === "pen" ? penProps : highlightProps;
@@ -473,7 +473,7 @@ export default function Whiteboard() {
         if (startPos) {
           setPan({
             x: startPos.x + deltaX,
-            y: startPos.y + deltaY
+            y: startPos.y + deltaY,
           });
         }
         return;
@@ -1106,33 +1106,61 @@ export default function Whiteboard() {
   };
 
   // Create a zoom button component
-  const ZoomControls = () => (
-    <div className={cn(
-      "fixed left-4 bottom-20 z-30 flex flex-col gap-2 p-2 rounded-lg shadow-lg backdrop-blur-sm",
-      darkMode ? "bg-gray-900/70 border border-gray-800" : "bg-white/70 border border-gray-200"
-    )}>
+  const ZoomControls = memo(({ zoom, setZoom, setPan, darkMode }) => (
+    <div
+      className={cn(
+        "fixed left-4 bottom-20 z-30 flex flex-col gap-2 p-2 rounded-lg shadow-lg backdrop-blur-sm",
+        darkMode
+          ? "bg-gray-900/70 border border-gray-800"
+          : "bg-white/70 border border-gray-200"
+      )}
+    >
       <button
-        onClick={() => setZoom(z => Math.min(5, z + 0.1))}
+        onClick={() => setZoom((z) => Math.min(5, z + 0.1))}
         className={controlButtonStyle}
         title="Zoom In"
       >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 4V20M4 12H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M12 4V20M4 12H20"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
         </svg>
       </button>
-      <div className={cn(
-        "text-center text-xs font-medium px-2 py-1 rounded", 
-        darkMode ? "text-gray-300 bg-gray-800" : "text-gray-600 bg-gray-100"
-      )}>
+      <div
+        className={cn(
+          "text-center text-xs font-medium px-2 py-1 rounded",
+          darkMode ? "text-gray-300 bg-gray-800" : "text-gray-600 bg-gray-100"
+        )}
+      >
         {Math.round(zoom * 100)}%
       </div>
       <button
-        onClick={() => setZoom(z => Math.max(0.1, z - 0.1))}
+        onClick={() => setZoom((z) => Math.max(0.1, z - 0.1))}
         className={controlButtonStyle}
         title="Zoom Out"
       >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M4 12H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M4 12H20"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
         </svg>
       </button>
       <button
@@ -1143,13 +1171,28 @@ export default function Whiteboard() {
         className={controlButtonStyle}
         title="Reset Zoom"
       >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12Z" stroke="currentColor" strokeWidth="2"/>
-          <path d="M12 8V16M8 12H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12Z"
+            stroke="currentColor"
+            strokeWidth="2"
+          />
+          <path
+            d="M12 8V16M8 12H16"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
         </svg>
       </button>
     </div>
-  );
+  ));
 
   return (
     <div
@@ -1240,9 +1283,11 @@ export default function Whiteboard() {
             className="absolute inset-0 w-full h-full z-0 pointer-events-none flex items-center justify-center"
             style={{
               // Adjust background based on dark mode if needed
-              backgroundColor: darkMode ? 'rgb(17 24 39 / var(--tw-bg-opacity))' : 'white',
+              backgroundColor: darkMode
+                ? "rgb(17 24 39 / var(--tw-bg-opacity))"
+                : "white",
               transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-              transformOrigin: '0 0'
+              transformOrigin: "0 0",
             }}
           >
             <Document
@@ -1257,8 +1302,16 @@ export default function Whiteboard() {
                 renderTextLayer={false} // Disable text layer if not needed for drawing
                 renderAnnotationLayer={false} // Disable annotation layer
                 // Scale page to fit container while maintaining aspect ratio
-                width={pdfDimensions.width > 0 ? Math.min(window.innerWidth * 0.9, pdfDimensions.width) : undefined}
-                height={pdfDimensions.height > 0 ? Math.min(window.innerHeight * 0.9, pdfDimensions.height) : undefined}
+                width={
+                  pdfDimensions.width > 0
+                    ? Math.min(window.innerWidth * 0.9, pdfDimensions.width)
+                    : undefined
+                }
+                height={
+                  pdfDimensions.height > 0
+                    ? Math.min(window.innerHeight * 0.9, pdfDimensions.height)
+                    : undefined
+                }
                 className="shadow-lg"
               />
             </Document>
@@ -1266,10 +1319,10 @@ export default function Whiteboard() {
         )}
         <svg
           ref={svgRef}
-          style={{ 
+          style={{
             touchAction: "none",
             transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-            transformOrigin: '0 0'
+            transformOrigin: "0 0",
           }}
           className={cn(
             "absolute inset-0 w-full h-full z-10 select-none transition-colors duration-300",
@@ -1993,9 +2046,14 @@ export default function Whiteboard() {
           )}
         </svg>
       </main>
-      
+
       {/* Add zoom controls that are always visible regardless of mode */}
-      <ZoomControls />
+      <ZoomControls
+        zoom={zoom}
+        setZoom={setZoom}
+        setPan={setPan}
+        darkMode={darkMode}
+      />
 
       <footer className="absolute bottom-2 left-1/2 -translate-x-1/2 text-center text-xs font-medium opacity-80 select-none z-30">
         Made with <span className="text-pink-500">❤️</span> by{" "}
