@@ -15,7 +15,7 @@ pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pd
 export default function Whiteboard() {
   // Add display name
   Whiteboard.displayName = "Whiteboard";
-  
+
   // Board management states
   const [boards, setBoards] = useState([
     { id: 1, name: "Board 1", elements: [], pdfUrl: null },

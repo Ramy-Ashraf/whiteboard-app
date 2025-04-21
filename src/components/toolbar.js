@@ -24,7 +24,6 @@ import {
   LuImage,
   LuChevronLeft,
   LuChevronRight,
-  LuMinus,
 } from "react-icons/lu";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -109,8 +108,6 @@ const Toolbar = ({
   pageNumber,
   setPageNumber,
   pdfUrl,
-  zoom,
-  setZoom,
   closePdf,
 }) => {
   const [showToolOptions, setShowToolOptions] = useState(false);
@@ -391,9 +388,18 @@ const Toolbar = ({
                 isActive={false}
                 darkMode={darkMode}
                 disabled={pageNumber <= 1}
-                className={cn(pageNumber <= 1 && "opacity-50 cursor-not-allowed")}
+                className={cn(
+                  pageNumber <= 1 && "opacity-50 cursor-not-allowed"
+                )}
               />
-              <span className={cn("text-xs font-medium px-2 py-1 rounded", darkMode ? "text-gray-300 bg-gray-800" : "text-gray-600 bg-gray-100")}>
+              <span
+                className={cn(
+                  "text-xs font-medium px-2 py-1 rounded",
+                  darkMode
+                    ? "text-gray-300 bg-gray-800"
+                    : "text-gray-600 bg-gray-100"
+                )}
+              >
                 {pageNumber} / {numPages}
               </span>
               <ToolbarButton
@@ -403,7 +409,9 @@ const Toolbar = ({
                 isActive={false}
                 darkMode={darkMode}
                 disabled={pageNumber >= numPages}
-                className={cn(pageNumber >= numPages && "opacity-50 cursor-not-allowed")}
+                className={cn(
+                  pageNumber >= numPages && "opacity-50 cursor-not-allowed"
+                )}
               />
             </div>
           )}
