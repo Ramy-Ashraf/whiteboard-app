@@ -20,6 +20,9 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <header>
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+      </header>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
