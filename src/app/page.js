@@ -1220,17 +1220,28 @@ export default function Whiteboard() {
   const saveCurrentBoard = () => {
     if (!svgRef.current) return;
     
+    // Get the actual visible area dimensions
+    const svgRect = svgRef.current.getBoundingClientRect();
+    const visibleWidth = svgRect.width;
+    const visibleHeight = svgRect.height;
+    
     // Create a clone of the SVG to avoid modifying the original
     const svgClone = svgRef.current.cloneNode(true);
     
-    // If there's a PDF in the background, we need special handling
-    let bgCanvas = null;
-    let pdfIncluded = false;
-
     // Remove any selection elements that shouldn't be in the saved image
     const selectionElements = svgClone.querySelectorAll("[stroke-dasharray='6 3']");
     selectionElements.forEach(el => el.remove());
 
+    // Set the viewBox to match the current visible area
+    const viewBoxX = -pan.x / zoom;
+    const viewBoxY = -pan.y / zoom;
+    const viewBoxWidth = visibleWidth / zoom;
+    const viewBoxHeight = visibleHeight / zoom;
+    
+    svgClone.setAttribute("viewBox", `${viewBoxX} ${viewBoxY} ${viewBoxWidth} ${viewBoxHeight}`);
+    svgClone.setAttribute("width", visibleWidth);
+    svgClone.setAttribute("height", visibleHeight);
+    
     // Reset the transform to ensure proper rendering
     svgClone.style.transform = "";
 
@@ -1238,15 +1249,13 @@ export default function Whiteboard() {
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
     
-    // Set dimensions - we'll use the current SVG viewbox or a default size
-    const width = window.innerWidth * 2;
-    const height = window.innerHeight * 2;
-    canvas.width = width;
-    canvas.height = height;
+    // Set canvas dimensions to match the visible area
+    canvas.width = visibleWidth;
+    canvas.height = visibleHeight;
 
     // Fill with background color based on dark mode
     ctx.fillStyle = darkMode ? "#111827" : "#ffffff";
-    ctx.fillRect(0, 0, width, height);
+    ctx.fillRect(0, 0, visibleWidth, visibleHeight);
 
     // Convert SVG to string with proper XML declaration
     const svgData = new XMLSerializer().serializeToString(svgClone);
@@ -1258,7 +1267,7 @@ export default function Whiteboard() {
     const img = new Image();
     img.onload = () => {
       // Draw the SVG content
-      ctx.drawImage(img, 0, 0, width, height);
+      ctx.drawImage(img, 0, 0, visibleWidth, visibleHeight);
       DOMURL.revokeObjectURL(url);
 
       // Convert canvas to downloadable image
