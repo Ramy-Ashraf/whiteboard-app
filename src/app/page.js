@@ -353,8 +353,8 @@ export default function Whiteboard() {
         setTextBox({
           x: svgPoint.x,
           y: svgPoint.y,
-          width: 100,
-          height: textProps.fontSize * 2,
+          width: textProps.fontSize * 7,
+          height: textProps.fontSize * 2, 
           content: "",
           id: Date.now(),
           active: false,
@@ -946,26 +946,45 @@ export default function Whiteboard() {
   };
 
   const handleTextChange = (e) => {
-    setTextBox((prev) => ({
-      ...prev,
-      content: e.target.value,
-    }));
+    setTextBox((prev) => {
+      // Create temporary text measurement element
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      ctx.font = `${prev.fontSize}px sans-serif`;
+      
+      // Measure the text width
+      const lines = e.target.value.split("\n");
+      const maxLineWidth = Math.max(
+        ...lines.map(line => ctx.measureText(line).width),
+        100 // Minimum width
+      );
+      
+      // Calculate height based on number of lines
+      const lineHeight = prev.fontSize * 1.2;
+      const textHeight = Math.max(
+        lineHeight * lines.length,
+        prev.fontSize * 2 // Minimum height
+      );
+      
+      return {
+        ...prev,
+        content: e.target.value,
+        width: Math.max(prev.width, maxLineWidth + 20), // Add padding
+        height: Math.max(prev.height, textHeight + 10) // Add padding
+      };
+    });
   };
 
   const finalizeText = () => {
     if (textBox && textBox.content.trim()) {
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
-      ctx.font = `${textBox.fontSize}px sans-serif`;
-      const measuredWidth = ctx.measureText(textBox.content.trim()).width;
-
+      // Use the already calculated dimensions from the textbox
       setActiveBoardElements((prev) => [
         ...prev,
         {
           type: "text",
           x: textBox.x,
           y: textBox.y,
-          width: measuredWidth,
+          width: textBox.width,
           content: textBox.content,
           id: textBox.id,
           color: textProps.color,
@@ -1197,6 +1216,98 @@ export default function Whiteboard() {
     </div>
   ));
 
+  // Add save current board function
+  const saveCurrentBoard = () => {
+    if (!svgRef.current) return;
+    
+    // Get the actual visible area dimensions
+    const svgRect = svgRef.current.getBoundingClientRect();
+    const visibleWidth = svgRect.width;
+    const visibleHeight = svgRect.height;
+    
+    // Create a clone of the SVG to avoid modifying the original
+    const svgClone = svgRef.current.cloneNode(true);
+    
+    // Remove any selection elements that shouldn't be in the saved image
+    const selectionElements = svgClone.querySelectorAll("[stroke-dasharray='6 3']");
+    selectionElements.forEach(el => el.remove());
+
+    // Set the viewBox to match the current visible area
+    const viewBoxX = -pan.x / zoom;
+    const viewBoxY = -pan.y / zoom;
+    const viewBoxWidth = visibleWidth / zoom;
+    const viewBoxHeight = visibleHeight / zoom;
+    
+    svgClone.setAttribute("viewBox", `${viewBoxX} ${viewBoxY} ${viewBoxWidth} ${viewBoxHeight}`);
+    svgClone.setAttribute("width", visibleWidth);
+    svgClone.setAttribute("height", visibleHeight);
+    
+    // Reset the transform to ensure proper rendering
+    svgClone.style.transform = "";
+
+    // Create a canvas element to draw the SVG
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    
+    // Set canvas dimensions to match the visible area
+    canvas.width = visibleWidth;
+    canvas.height = visibleHeight;
+
+    // Fill with background color based on dark mode
+    ctx.fillStyle = darkMode ? "#111827" : "#ffffff";
+    ctx.fillRect(0, 0, visibleWidth, visibleHeight);
+
+    // Convert SVG to string with proper XML declaration
+    const svgData = new XMLSerializer().serializeToString(svgClone);
+    const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+    const DOMURL = window.URL || window.webkitURL || window;
+    const url = DOMURL.createObjectURL(svgBlob);
+    
+    // Create new image from SVG
+    const img = new Image();
+    img.onload = () => {
+      // Draw the SVG content
+      ctx.drawImage(img, 0, 0, visibleWidth, visibleHeight);
+      DOMURL.revokeObjectURL(url);
+
+      // Convert canvas to downloadable image
+      const imgURI = canvas.toDataURL("image/png");
+      
+      // Create download link
+      const link = document.createElement("a");
+      link.download = `${activeBoard.name || "whiteboard"}-${new Date().toISOString().slice(0,10)}.png`;
+      link.href = imgURI;
+      link.click();
+    };
+    
+    // Start the process by loading the SVG image
+    img.src = url;
+  };
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Delete or backspace key to delete selected elements
+      if ((e.key === 'Delete' || e.key === 'Backspace') && 
+          mode === 'select' && 
+          selectedElements.size > 0 &&
+          !textBox) {
+        deleteElement();
+      }
+      
+      // Ctrl+S or Cmd+S to save board
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        saveCurrentBoard();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [mode, selectedElements, textBox]);
+
   return (
     <div
       className={cn(
@@ -1259,6 +1370,7 @@ export default function Whiteboard() {
         zoom={zoom}
         setZoom={setZoom}
         closePdf={closePdf}
+        saveCurrentBoard={saveCurrentBoard}
       />
 
       <main
@@ -2017,12 +2129,22 @@ export default function Whiteboard() {
                     if (!isResizingTextBox) finalizeText();
                   }}
                   onMouseDown={(e) => e.stopPropagation()}
-                  style={{ fontSize: textBox.fontSize, resize: "none" }}
+                  style={{ 
+                    fontSize: `${textBox.fontSize}px`,
+                    resize: "none", 
+                    color: textProps.color,
+                    caretColor: textProps.color,
+                    lineHeight: "1.2",
+                    fontFamily: "sans-serif",
+                    border: `2px dashed ${textProps.color}`,
+                    borderRadius: "8px",
+                    padding: "4px"
+                  }}
                   className={cn(
-                    "w-full h-full border-2 rounded p-2 text-lg outline-none font-sans",
+                    "w-full h-full outline-none font-sans bg-transparent",
                     darkMode
-                      ? "bg-gray-800 text-white border-violet-600"
-                      : "bg-white text-black border-violet-600"
+                      ? "text-white"
+                      : "text-black"
                   )}
                   onKeyDown={(e) => e.key === "Enter" && e.target.blur()}
                   placeholder="Type here..."
