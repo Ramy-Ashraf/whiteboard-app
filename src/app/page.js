@@ -353,8 +353,8 @@ export default function Whiteboard() {
         setTextBox({
           x: svgPoint.x,
           y: svgPoint.y,
-          width: 100,
-          height: textProps.fontSize * 2,
+          width: textProps.fontSize * 7,
+          height: textProps.fontSize * 2, 
           content: "",
           id: Date.now(),
           active: false,
@@ -946,26 +946,45 @@ export default function Whiteboard() {
   };
 
   const handleTextChange = (e) => {
-    setTextBox((prev) => ({
-      ...prev,
-      content: e.target.value,
-    }));
+    setTextBox((prev) => {
+      // Create temporary text measurement element
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      ctx.font = `${prev.fontSize}px sans-serif`;
+      
+      // Measure the text width
+      const lines = e.target.value.split("\n");
+      const maxLineWidth = Math.max(
+        ...lines.map(line => ctx.measureText(line).width),
+        100 // Minimum width
+      );
+      
+      // Calculate height based on number of lines
+      const lineHeight = prev.fontSize * 1.2;
+      const textHeight = Math.max(
+        lineHeight * lines.length,
+        prev.fontSize * 2 // Minimum height
+      );
+      
+      return {
+        ...prev,
+        content: e.target.value,
+        width: Math.max(prev.width, maxLineWidth + 20), // Add padding
+        height: Math.max(prev.height, textHeight + 10) // Add padding
+      };
+    });
   };
 
   const finalizeText = () => {
     if (textBox && textBox.content.trim()) {
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
-      ctx.font = `${textBox.fontSize}px sans-serif`;
-      const measuredWidth = ctx.measureText(textBox.content.trim()).width;
-
+      // Use the already calculated dimensions from the textbox
       setActiveBoardElements((prev) => [
         ...prev,
         {
           type: "text",
           x: textBox.x,
           y: textBox.y,
-          width: measuredWidth,
+          width: textBox.width,
           content: textBox.content,
           id: textBox.id,
           color: textProps.color,
@@ -2017,12 +2036,22 @@ export default function Whiteboard() {
                     if (!isResizingTextBox) finalizeText();
                   }}
                   onMouseDown={(e) => e.stopPropagation()}
-                  style={{ fontSize: textBox.fontSize, resize: "none" }}
+                  style={{ 
+                    fontSize: `${textBox.fontSize}px`,
+                    resize: "none", 
+                    color: textProps.color,
+                    caretColor: textProps.color,
+                    lineHeight: "1.2",
+                    fontFamily: "sans-serif",
+                    border: `2px dotted ${textProps.color}`,
+                    borderRadius: "8px",
+                    padding: "4px"
+                  }}
                   className={cn(
-                    "w-full h-full border-2 rounded p-2 text-lg outline-none font-sans",
+                    "w-full h-full outline-none font-sans bg-transparent",
                     darkMode
-                      ? "bg-gray-800 text-white border-violet-600"
-                      : "bg-white text-black border-violet-600"
+                      ? "text-white"
+                      : "text-black"
                   )}
                   onKeyDown={(e) => e.key === "Enter" && e.target.blur()}
                   placeholder="Type here..."
