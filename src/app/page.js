@@ -2043,7 +2043,7 @@ export default function Whiteboard() {
                     caretColor: textProps.color,
                     lineHeight: "1.2",
                     fontFamily: "sans-serif",
-                    border: `2px dotted ${textProps.color}`,
+                    border: `2px dashed ${textProps.color}`,
                     borderRadius: "8px",
                     padding: "4px"
                   }}
