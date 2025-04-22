@@ -1216,6 +1216,89 @@ export default function Whiteboard() {
     </div>
   ));
 
+  // Add save current board function
+  const saveCurrentBoard = () => {
+    if (!svgRef.current) return;
+    
+    // Create a clone of the SVG to avoid modifying the original
+    const svgClone = svgRef.current.cloneNode(true);
+    
+    // If there's a PDF in the background, we need special handling
+    let bgCanvas = null;
+    let pdfIncluded = false;
+
+    // Remove any selection elements that shouldn't be in the saved image
+    const selectionElements = svgClone.querySelectorAll("[stroke-dasharray='6 3']");
+    selectionElements.forEach(el => el.remove());
+
+    // Reset the transform to ensure proper rendering
+    svgClone.style.transform = "";
+
+    // Create a canvas element to draw the SVG
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    
+    // Set dimensions - we'll use the current SVG viewbox or a default size
+    const width = window.innerWidth * 2;
+    const height = window.innerHeight * 2;
+    canvas.width = width;
+    canvas.height = height;
+
+    // Fill with background color based on dark mode
+    ctx.fillStyle = darkMode ? "#111827" : "#ffffff";
+    ctx.fillRect(0, 0, width, height);
+
+    // Convert SVG to string with proper XML declaration
+    const svgData = new XMLSerializer().serializeToString(svgClone);
+    const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+    const DOMURL = window.URL || window.webkitURL || window;
+    const url = DOMURL.createObjectURL(svgBlob);
+    
+    // Create new image from SVG
+    const img = new Image();
+    img.onload = () => {
+      // Draw the SVG content
+      ctx.drawImage(img, 0, 0, width, height);
+      DOMURL.revokeObjectURL(url);
+
+      // Convert canvas to downloadable image
+      const imgURI = canvas.toDataURL("image/png");
+      
+      // Create download link
+      const link = document.createElement("a");
+      link.download = `${activeBoard.name || "whiteboard"}-${new Date().toISOString().slice(0,10)}.png`;
+      link.href = imgURI;
+      link.click();
+    };
+    
+    // Start the process by loading the SVG image
+    img.src = url;
+  };
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Delete or backspace key to delete selected elements
+      if ((e.key === 'Delete' || e.key === 'Backspace') && 
+          mode === 'select' && 
+          selectedElements.size > 0 &&
+          !textBox) {
+        deleteElement();
+      }
+      
+      // Ctrl+S or Cmd+S to save board
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        saveCurrentBoard();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [mode, selectedElements, textBox]);
+
   return (
     <div
       className={cn(
@@ -1278,6 +1361,7 @@ export default function Whiteboard() {
         zoom={zoom}
         setZoom={setZoom}
         closePdf={closePdf}
+        saveCurrentBoard={saveCurrentBoard}
       />
 
       <main

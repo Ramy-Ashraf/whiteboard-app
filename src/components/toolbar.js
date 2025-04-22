@@ -24,6 +24,7 @@ import {
   LuImage,
   LuChevronLeft,
   LuChevronRight,
+  LuSave,
 } from "react-icons/lu";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -109,6 +110,7 @@ const Toolbar = ({
   setPageNumber,
   pdfUrl,
   closePdf,
+  saveCurrentBoard,
 }) => {
   const [showToolOptions, setShowToolOptions] = useState(false);
   const [showBoardMenu, setShowBoardMenu] = useState(false);
@@ -377,6 +379,15 @@ const Toolbar = ({
               )}
             </AnimatePresence>
           </div>
+
+          {/* Save button */}
+          <ToolbarButton
+            onClick={saveCurrentBoard}
+            title="Save Board as PNG"
+            icon={LuSave}
+            isActive={false}
+            darkMode={darkMode}
+          />
 
           {/* PDF Navigation (only show if PDF is loaded) */}
           {pdfUrl && numPages && (
